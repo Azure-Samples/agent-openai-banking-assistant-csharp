@@ -15,6 +15,7 @@ products:
 - azure-cognitive-search
 - azure-container-apps
 - azure-sdks
+- semantic-kernel
 - github
 - document-intelligence
 - azure-monitor
@@ -54,7 +55,7 @@ The core use case of this Proof of Concept (PoC) revolves around a banking perso
 
 Instead of navigating through traditional web interfaces and menus, users can simply converse with the AI-powered assistant to inquire about their account balances, review recent transactions, or initiate payments. This approach not only enhances user experience by making financial management more intuitive and accessible but also leverages the existing workload data and APIs to ensure a reliable and secure service.
 
-Invoices samples are included in the data folder to make it easy to explore payments feature. The payment agent equipped with OCR tools ( Azure Document Intelligence) will lead the conversation with the user to extract the invoice data and initiate the payment process. Other account fake data as transactions, payment methods and account balance are also available to be queried by the user. All data and services are exposed as external REST APIs and consumed by the agents to provide the user with the requested information.
+Invoices samples are included in the data folder to make it easy to explore payments feature. The payment agent equipped with OCR tools ( Azure Document Intelligence) will lead the conversation with the user to extract the invoice data and initiate the payment process. Other account fake data as transactions, payment methods and account balance are also available to be queried by the user. All data and services are exposed as external REST APIs or MCP Servers and consumed by the agents to provide the user with the requested information.
 
 ## Features 
 This project provides the following features and technical patterns:
@@ -64,11 +65,11 @@ This project provides the following features and technical patterns:
  - Tools output cache scoped at chat conversation level.It improves functions call planning and parameters extraction for long chat.
  - Chat based conversation implemented as [React Single Page Application](https://react.fluentui.dev/?path=/docs/concepts-introduction--docs) with support for images upload.Supported images are invoices, receipts, bills jpeg/png files you want your virtual banking assistant to pay on your behalf.
  - Images scanning and data extraction with Azure Document Intelligence using [prebuilt-invoice](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-invoice?view=doc-intel-4.0.0) model.
- - Import REST api contracts (OpenAPI yaml files) as agent tools, providing automatic rest client call.
+ - Import REST api contracts (OpenAPI yaml files) as Transaction agent tools providing automatic rest client call.
+ - Import MCP as Account agent and Payment agen tools providing automatic MCP server tool calls.
  - Add a copilot app side-by-side to your existing business microservices hosted on [Azure Container Apps](https://azure.microsoft.com/en-us/products/container-apps).
  - Automated Azure resources creation and solution deployment leveraging [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/).
 
-For complex agents conversation implementation, read more about [Autogen framework](https://github.com/microsoft/autogen).
 
 ### Architecture
 ![HLA](docs/assets/HLA.png)
@@ -77,11 +78,11 @@ The personal banking assistant is designed as a [vertical multi-agent system](./
 - **Copilot Assistant Copilot App (Microservice)**: Serves as the central hub for processing user requests. It's a spring boot application implementing a vertical multi-agent architectures using .NET Semantic Kernel to create Agents equipped with tools. The Agent Router is used to understand user intent from chat interactions and routes the request to the appropriate domain-specific agent.
     - **Agent Router**: Acts as a user proxy, interpreting user intent based on chat inputs and directing the request to the specific domain agent. This component ensures that user queries are efficiently handled by the relevant agent. It uses **IntentExtractor** tool backed by GPT4 model to extract the user intent in a json format. If intent is 'None' clarifying questions are provided. 
 
-    - **Account Agent**: Specializes in handling tasks related to banking account information, credit balance, and registered payment methods. It leverages specific Account service APIs to fetch and manage account-related data. Semantic Kernel HTTP plugin is used to create a tool definition from the rest api yaml contract (Open API specification) and automatically call the HTTP endpoint with input parameters extracted by gpt4 model from the chat conversation.
+    - **Account Agent**: Specializes in handling tasks related to banking account information, credit balance, and registered payment methods. It leverages specific Account services to fetch and manage account-related data. Semantic Kernel MCP plugin is used to create a tool definition from the MCP Server contract and automatically call the MCP endpoint with input parameters extracted by gpt4 model from the chat conversation.
 
     - **Transactions Agent**: Focuses on tasks related to querying user bank movements, including income and outcome payments. This agent accesses account api to retrieve accountid and transaction history service to search for transactions and present them to the user.
 
-    - **Payments Agent**: Dedicated to managing tasks related to submitting payments. It interacts with multiple APIs and tools, such as ScanInvoice (backed by Azure Document Intelligence), Account Service to retrieve account and payment methods info, Payment Service to submit payment processing and Transaction History service to check for previous paid invoices.
+    - **Payments Agent**: Dedicated to managing tasks related to submitting payments. It interacts with multiple APIs, MCP, and tools, such as ScanInvoice (backed by Azure Document Intelligence), Account Service to retrieve account and payment methods info, Payment Service to submit payment processing and Transaction History service to check for previous paid invoices.
 
 - **Existing Business APIs**: Interfaces with the backend systems to perform operations related to personal banking accounts, transactions, and invoice payments. These APIs are implemented as external spring boot microservices providing the necessary data and functionality consumed by agents to execute their tasks.
     - **Account Service (Microservice)**: Provides functionalities like retrieving account details by username, fetching payment methods, and getting registered beneficiaries. This microservice supports all 3 agents.
