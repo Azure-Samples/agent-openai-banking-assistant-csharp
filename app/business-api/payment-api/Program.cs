@@ -1,34 +1,29 @@
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true)
     .AddEnvironmentVariables("DOTNET_");
 
 // Add services to the container.
-// @TODO: Temporary. Fix later.
-builder.Services.AddCors(options => options.AddPolicy("allowSpecificOrigins", policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
-
-// Add services to the container.
 builder.Services.AddSingleton<ILoggerFactory>(LoggerFactory.Create(builder => builder.AddConsole()));
 
 builder.Services.AddServices();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//Add MCP Server and register tool classes
+builder.Services
+    .AddMcpServer(options =>
+    {
+        options.ServerInfo = new()
+        {
+            Name = "Payment Tool Server",
+            Version = "1.0.0",
+        };
+    })
+    .WithHttpTransport()
+    .WithTools<PaymentTool>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.UseCors("allowSpecificOrigins");
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+app.MapMcp();
 
 app.Run();

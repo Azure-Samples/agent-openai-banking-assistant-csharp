@@ -2,7 +2,7 @@
 using Microsoft.SemanticKernel;
 using System.Reflection;
 
-public class AgenticUtils
+internal class AgenticUtils
 {
     //protected readonly IToolsExecutionCache _toolsExecutionCache;
     private static Stream? GetAPIYaml(string apiName)
@@ -46,6 +46,26 @@ public class AgenticUtils
         KernelPlugin plugin = await OpenApiKernelPluginFactory.CreateFromOpenApiAsync(pluginName, stream!, parameters);
 
         kernel.Plugins.Add(plugin);
+    }
+
+    /// <summary>
+    /// Adds a plugin to the kernel using the MCP server/clien.
+    /// </summary>
+    /// <param name="kernel"></param>
+    /// <param name="clientName"></param>
+    /// <param name="pluginName"></param>
+    /// <param name="apiUrl"></param>
+    public static async void AddMcpServerPlugin(Kernel kernel, string clientName, string pluginName, string apiUrl)
+    {
+        var mcpClient = await McpClientFactory.CreateAsync(
+                new SseClientTransport(
+                    new SseClientTransportOptions() { Endpoint = new Uri(apiUrl), Name = clientName }));
+
+        // Retrieve and display the list provided by the MCP server
+        IList<McpClientTool> tools = await mcpClient.ListToolsAsync();
+
+        // Register mcp tools with the kernel as functions
+        kernel.Plugins.AddFromFunctions(pluginName, tools.Select(mcpTools => mcpTools.AsKernelFunction()));
     }
 }
 

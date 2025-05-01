@@ -5,6 +5,7 @@ public class PaymentAgent
 {
     public ChatCompletionAgent agent;
     private ILogger<PaymentAgent> _logger;
+    
     public PaymentAgent(Kernel kernel, IConfiguration configuration, IDocumentScanner documentScanner, IUserService userService, ILoggerFactory loggerFactory)
     {
         _logger = loggerFactory.CreateLogger<PaymentAgent>();
@@ -14,6 +15,9 @@ public class PaymentAgent
         var transactionApiURL = configuration["BackendAPIs:TransactionsApiUrl"];
         var accountsApiURL = configuration["BackendAPIs:AccountsApiUrl"];
         var paymentsApiURL = configuration["BackendAPIs:PaymentsApiUrl"];
+        // sse is required to enable the mcp client to communicate using server-sent events (http)
+        paymentsApiURL += "/sse";
+        accountsApiURL += "/sse";
 
         AgenticUtils.AddOpenAPIPlugin(
            kernel: toolKernel,
@@ -22,22 +26,23 @@ public class PaymentAgent
            apiUrl: transactionApiURL
         );
 
-        AgenticUtils.AddOpenAPIPlugin(
-           kernel: toolKernel,
-           pluginName: "AccountsPlugin",
-           apiName: "account",
-           apiUrl: accountsApiURL
+        AgenticUtils.AddMcpServerPlugin(
+            kernel: toolKernel,
+            clientName: "banking-assistant-client",
+            pluginName: "PaymentsPlugins",
+            apiUrl: paymentsApiURL
         );
 
-        AgenticUtils.AddOpenAPIPlugin(
-           kernel: toolKernel,
-           pluginName: "PaymentsPlugin",
-           apiName: "payments",
-        apiUrl: paymentsApiURL
+        AgenticUtils.AddMcpServerPlugin(
+            kernel: toolKernel,
+            clientName: "banking-assistant-client",
+            pluginName: "AccountPlugins",
+            apiUrl: accountsApiURL
         );
+
 
         toolKernel.Plugins.AddFromObject(new InvoiceScanPlugin(documentScanner, loggerFactory.CreateLogger<InvoiceScanPlugin>()), "InvoiceScanPlugin");
-       
+
         this.agent =
         new()
         {

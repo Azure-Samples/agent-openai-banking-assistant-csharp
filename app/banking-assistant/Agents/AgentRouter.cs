@@ -13,8 +13,8 @@ public class AgentRouter
     {
         _kernel = kernel;
         _intentExtractorAgent = new IntentExtractorAgent(kernel, configuration, loggerFactory.CreateLogger<IntentExtractorAgent>());
+        _accountAgent = new AccountAgent(kernel, configuration, userService, loggerFactory.CreateLogger<AccountAgent>());
         _transactionsReportingAgent = new TransactionsReportingAgent(kernel, configuration, userService, loggerFactory.CreateLogger<TransactionsReportingAgent>());
-        _accountAgent = new AccountAgent(kernel, configuration, loggerFactory.CreateLogger<AccountAgent>());
         _paymentAgent = new PaymentAgent(kernel, configuration, documentScanner, userService, loggerFactory);
         _logger = loggerFactory.CreateLogger<AgentRouter>();
     }
@@ -77,7 +77,7 @@ public class AgentRouter
                 // The prompt variable name for the history argument.
                 HistoryVariableName = "history",
                 // Limit total number of turns
-                MaximumIterations = 1,
+                MaximumIterations = 3,
                 // Customer result parser to determine if the response is "yes"
                 // ResultParser = (result) => result.GetValue<string>()?.Contains("success", StringComparison.OrdinalIgnoreCase) ?? false
             };

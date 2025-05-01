@@ -71,18 +71,18 @@ using Microsoft.Extensions.Options;
             }
         }
 
-        private Transaction ConvertPaymentToTransaction(Payment payment)
-        {
-            return new Transaction(
-                Id: Guid.NewGuid().ToString(),
-                Description: payment.Description,
-                Type: "outcome",
-                RecipientName: payment.RecipientName,
-                RecipientBankCode: payment.RecipientBankCode,
-                AccountId: payment.AccountId,
-                PaymentType: payment.PaymentType,
-                Amount: payment.Amount,
-                Timestamp: payment.Timestamp
-            );
-        }
+    private Transaction ConvertPaymentToTransaction(Payment payment)
+    {
+        return new Transaction() { 
+            Id = Guid.NewGuid().ToString(),
+            Description = payment.Description,
+            Type = "outcome",
+            RecipientName = payment.RecipientName,
+            RecipientBankCode = payment.RecipientBankCode,
+            PaymentType = payment.PaymentType,
+            AccountId = payment.AccountId,
+            Amount = payment.Amount,
+            Timestamp = payment.Timestamp
+        };
+    }
     }

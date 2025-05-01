@@ -1,36 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-agent_openai_banking_assistant_csharp-05deeddb-ea48-418d-a54b-a130c32f34a3</UserSecretsId>
-    <RootNamespace>agent_openai_banking_assistant_csharp</RootNamespace>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
-	<NoWarn>$(NoWarn);CA2007;IDE1006;SKEXP0001;SKEXP0110;OPENAI001</NoWarn>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>aspnet-agent_openai_banking_assistant_csharp-05deeddb-ea48-418d-a54b-a130c32f34a3</UserSecretsId>
+		<RootNamespace>agent_openai_banking_assistant_csharp</RootNamespace>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileContext>.</DockerfileContext>
+		<NoWarn>$(NoWarn);CA2007;IDE1006;SKEXP0001;SKEXP0110;OPENAI001</NoWarn>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.4" />
-    <PackageReference Include="Azure.Identity" Version="1.13.2" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" NoWarn="NU1605" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.2" NoWarn="NU1605" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Azure" Version="1.10.0" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="3.2.2" />
-    <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="3.0.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.42.0-preview" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.42.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Plugins.OpenApi" Version="1.43.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
+		<PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.4" />
+		<PackageReference Include="Azure.Identity" Version="1.13.2" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" NoWarn="NU1605" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.2" NoWarn="NU1605" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Azure" Version="1.10.0" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="3.8.3" />
+		<PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="3.0.0" />
+		<PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.47.0" />
+		<PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.47.0" />
+		<PackageReference Include="Microsoft.SemanticKernel.Plugins.OpenApi" Version="1.47.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
+		<PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.1.0-preview.10" />
+		<PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.10" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="OpenAPI\*.yaml" />

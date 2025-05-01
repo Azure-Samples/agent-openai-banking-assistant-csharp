@@ -10,7 +10,8 @@ public class TransactionsReportingAgent
 
         var transactionApiURL = configuration["BackendAPIs:TransactionsApiUrl"];
         var accountsApiURL = configuration["BackendAPIs:AccountsApiUrl"];
-        var paymentsApiURL = configuration["BackendAPIs:PaymentsApiUrl"];
+        // sse is required to enable the mcp client to communicate using server-sent events (http)
+        accountsApiURL += "/sse";
 
         AgenticUtils.AddOpenAPIPlugin(
            kernel: toolKernel,
@@ -19,11 +20,11 @@ public class TransactionsReportingAgent
            apiUrl: transactionApiURL
         );
 
-        AgenticUtils.AddOpenAPIPlugin(
-           kernel: toolKernel,
-           pluginName: "AccountsPlugin",
-           apiName: "account",
-           apiUrl: accountsApiURL
+        AgenticUtils.AddMcpServerPlugin(
+            kernel: toolKernel,
+            clientName: "banking-assistant-client",
+            pluginName: "AccountPlugins",
+            apiUrl: accountsApiURL
         );
 
         this.agent =
