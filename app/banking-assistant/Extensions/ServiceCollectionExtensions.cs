@@ -1,6 +1,6 @@
 ﻿public static class ServicesExtensions
 {
-    public static IServiceCollection AddAzureServices(this IServiceCollection services, , IConfiguration configuration)
+    public static IServiceCollection AddAzureServices(this IServiceCollection services, IConfiguration configuration)
     {
 
         // Register Azure Blob Service Client via the Azure Clients builder.
