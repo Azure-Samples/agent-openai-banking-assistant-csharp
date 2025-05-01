@@ -1,12 +1,11 @@
 ﻿public static class ServicesExtensions
 {
-    public static IServiceCollection AddAzureServices(this IServiceCollection services)
+    public static IServiceCollection AddAzureServices(this IServiceCollection services, , IConfiguration configuration)
     {
 
         // Register Azure Blob Service Client via the Azure Clients builder.
         services.AddSingleton<BlobServiceClient>(provider =>
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             var credential = new DefaultAzureCredential();
             var accountName = configuration["Storage:AccountName"];
             var storageEndpoint = $"https://{accountName}.blob.core.windows.net";
@@ -20,7 +19,6 @@
         // Register BlobStorageProxy as IBlobStorage.
         services.AddSingleton<IBlobStorage>(provider =>
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             var blobServiceClient = provider.GetRequiredService<BlobServiceClient>();
             var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<BlobStorageProxy>();
             return new BlobStorageProxy(blobServiceClient, logger, configuration);
@@ -29,7 +27,6 @@
         // Register DocumentIntelligenceClient.
         services.AddSingleton<DocumentIntelligenceClient>(provider =>
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             var endpoint = configuration["DocumentIntelligence:Endpoint"];
             var apiKey = configuration["DocumentIntelligence:ApiKey"];
             var credential = new DefaultAzureCredential();
@@ -42,7 +39,6 @@
         // Register OpenAIClient.
         services.AddSingleton<AzureOpenAIClient>(provider =>
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             var endpoint = configuration["AzureOpenAI:Endpoint"];
             var apiKey = configuration["AzureOpenAI:ApiKey"];
             return new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
@@ -50,7 +46,6 @@
 
         services.AddSingleton<Kernel>(provider =>
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             var deploymentName = configuration[key: "AzureOpenAI:Deployment"];
             var endpoint = configuration[key: "AzureOpenAI:Endpoint"];
             var apiKey = configuration[key: "AzureOpenAI:ApiKey"];
@@ -65,7 +60,6 @@
 
         services.AddSingleton<AgentRouter>(provider =>
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
             var kernel = provider.GetRequiredService<Kernel>();
             var documentScanner = provider.GetRequiredService<IDocumentScanner>();
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
