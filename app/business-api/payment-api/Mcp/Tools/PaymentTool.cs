@@ -2,7 +2,6 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 
 [McpServerToolType]
-//[TypeFilter<McpActionFilter>]
 public class PaymentTool
 {
     private readonly IPaymentService _paymentService;
