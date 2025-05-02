@@ -77,7 +77,7 @@ public class AgentRouter
                 // The prompt variable name for the history argument.
                 HistoryVariableName = "history",
                 // Limit total number of turns
-                MaximumIterations = 3,
+                MaximumIterations = 1,
                 // Customer result parser to determine if the response is "yes"
                 // ResultParser = (result) => result.GetValue<string>()?.Contains("success", StringComparison.OrdinalIgnoreCase) ?? false
             };
