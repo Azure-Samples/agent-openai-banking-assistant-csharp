@@ -14,9 +14,9 @@ services:
       - DOTNET_Storage__ContainerName=${AZURE_STORAGE_CONTAINER}
       - DOTNET_AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
       - DOTNET_AzureOpenAI__Deployment=${AZURE_OPENAI_CHATGPT_DEPLOYMENT}
-      - DOTNET_AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY}
-      - DOTNET_DocumentIntelligence__ApiKey=${AZURE_DOCUMENT_INTELLIGENCE_API_KEY}
-      - DOTNET_DocumentIntelligence__Endpoint=${AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT}
+      - DOTNET_AzureOpenAI__ApiKey=${AZURE_OPENAI_APIKEY}
+      - DOTNET_DocumentIntelligence__ApiKey=${AZURE_DOCUMENT_INTELLIGENCE_SERVICE_APIKEY}
+      - DOTNET_DocumentIntelligence__Endpoint=${AZURE_DOCUMENT_INTELLIGENCE_SERVICE_ENDPOINT}
       - DOTNET_BackendAPIs__AccountsApiUrl=http://account:8080
       - DOTNET_BackendAPIs__PaymentsApiUrl=http://payment:8080
       - DOTNET_BackendAPIs__TransactionsApiUrl=http://transaction:8080
