@@ -22,6 +22,11 @@ services:
       - DOTNET_BackendAPIs__TransactionsApiUrl=http://transaction:8080
       - DOTNET_AzureAd__ClientId=${servicePrincipal}
       - DOTNET_AzureAd__TenantId=${servicePrincipalTenant}
+      - DOTNET_ApplicationInsights__Active=false
+      - AZURE_CLIENT_ID=${servicePrincipal}
+      - AZURE_TENANT_ID=${servicePrincipalTenant}
+      - AZURE_CLIENT_SECRET=${servicePrincipalPassword}
+
   account:
     image: agent-openai-banking-assistant-csharp/business-account-api
     build:
