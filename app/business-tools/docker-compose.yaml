@@ -12,7 +12,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - DOTNET_BackendAPIs__TransactionsApiUrl=http://transactions-api:5002
     networks:
-      - business-api-network
+      - business-tools-network
 
   # Transactions Service  
   transactions-api:
@@ -24,7 +24,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     networks:
-      - business-api-network
+      - business-tools-network
 
   # Additional Service (generic placeholder)
   account-mcp:
@@ -36,11 +36,11 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     networks:
-      - business-api-network
+      - business-tools-network
 
 # Network configuration
 networks:
-  business-api-network:
+  business-tools-network:
     driver: bridge
 
 # Optional volume for persistent data

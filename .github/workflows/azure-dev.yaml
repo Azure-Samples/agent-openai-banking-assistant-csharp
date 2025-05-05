@@ -46,11 +46,11 @@ jobs:
               frontend:
                 - 'app/frontend/**'
               account-mcp:
-                - 'app/business-api/account-mcp/**'
+                - 'app/business-tools/account-mcp/**'
               payment-mcp:
-                - 'app/business-api/payment-mcp/**'
+                - 'app/business-tools/payment-mcp/**'
               transactions-api:
-                - 'app/business-api/transactions-api/**'
+                - 'app/business-tools/transactions-api/**'
 
       - name: Set environment for branch
         id: set-deploy-env
@@ -76,7 +76,7 @@ jobs:
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
       image-name: agent-openai-banking-assistant-csharp/account-mcp
-      app-folder-path: ./app/business-api/account-mcp
+      app-folder-path: ./app/business-tools/account-mcp
     secrets: inherit
   
   deploy-account-app:
@@ -97,7 +97,7 @@ jobs:
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
       image-name: agent-openai-banking-assistant-csharp/transactions-api
-      app-folder-path: ./app/business-api/transactions-api
+      app-folder-path: ./app/business-tools/transactions-api
     secrets: inherit
   
   deploy-transactions-app:
@@ -118,7 +118,7 @@ jobs:
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
       image-name: agent-openai-banking-assistant-csharp/payment-mcp
-      app-folder-path: ./app/business-api/payment-mcp
+      app-folder-path: ./app/business-tools/payment-mcp
     secrets: inherit
   
   deploy-payment-app:
