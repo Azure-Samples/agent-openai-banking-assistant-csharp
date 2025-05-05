@@ -1,8 +1,4 @@
-﻿using agent_openai_banking_assistant_csharp.Interfaces;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 public class InvoiceScanPlugin
 {

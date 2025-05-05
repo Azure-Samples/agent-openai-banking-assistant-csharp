@@ -36,36 +36,25 @@
         // Register DocumentIntelligenceProxy as IDocumentScanner.
         services.AddSingleton<IDocumentScanner, DocumentIntelligenceProxy>();
 
-        // Register OpenAIClient.
-        services.AddSingleton<AzureOpenAIClient>(provider =>
-        {
-            var endpoint = configuration["AzureOpenAI:Endpoint"];
-            var apiKey = configuration["AzureOpenAI:ApiKey"];
-            return new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-        });
-
-        services.AddSingleton<Kernel>(provider =>
-        {
-            var deploymentName = configuration[key: "AzureOpenAI:Deployment"];
-            var endpoint = configuration[key: "AzureOpenAI:Endpoint"];
-            var apiKey = configuration[key: "AzureOpenAI:ApiKey"];
-            var credential = new DefaultAzureCredential();
-
-            IKernelBuilder kernelBuilder = Kernel.CreateBuilder();
-            kernelBuilder.AddAzureOpenAIChatCompletion(deploymentName: deploymentName, endpoint: endpoint, credentials: credential);
-            return kernelBuilder.Build();
-        });
+        // Register Azure OpenAI Kernel.
+        services.AddKernel().AddAzureOpenAIChatCompletion(
+            deploymentName: configuration["AzureOpenAI:Deployment"],
+            endpoint: configuration["AzureOpenAI:Endpoint"],
+            credentials: new DefaultAzureCredential()
+        );
 
         services.AddSingleton<IUserService, LoggedUserService>();
 
-        services.AddSingleton<AgentRouter>(provider =>
-        {
-            var kernel = provider.GetRequiredService<Kernel>();
-            var documentScanner = provider.GetRequiredService<IDocumentScanner>();
-            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-            var userService = provider.GetRequiredService<IUserService>();
-            return new AgentRouter(kernel, configuration, documentScanner, loggerFactory, userService);
-        });
+        // Register Agent Router
+        services.AddSingleton<IAgentRouter, AgentRouter>();
+        // Register Intent Extractor Agent
+        services.AddSingleton<IIntentExtractorAgent, IntentExtractorAgent>();
+        // Register Account Agent
+        services.AddSingleton<IAccountAgent, AccountAgent>();
+        // Register Payment Agent
+        services.AddSingleton<IPaymentAgent, PaymentAgent>();
+        // Register Transactions Reporting Agent
+        services.AddSingleton<ITransactionsReportingAgent, TransactionsReportingAgent>();
 
         return services;
     }

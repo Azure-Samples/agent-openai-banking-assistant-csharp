@@ -11,13 +11,13 @@ services:
     docker:
       remoteBuild: true
   account:
-    project: app/business-api/account-api
+    project: ./app/business-api/account-mcp
     language: dotnet
     host: containerapp
     docker:
       remoteBuild: true
   payment:
-    project: app/business-api/payment-api
+    project: app/business-api/payment-mcp
     language: dotnet
     host: containerapp
     docker:

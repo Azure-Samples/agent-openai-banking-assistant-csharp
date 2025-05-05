@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>account_api</RootNamespace>
+    <RootNamespace>account_mcp</RootNamespace>
     <UserSecretsId>b437e486-d868-44de-b6e8-11868ae40c39</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>

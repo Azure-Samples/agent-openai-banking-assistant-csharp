@@ -56,29 +56,37 @@
         _paymentMethods["345678"] = new PaymentMethod("345678", "BankTransfer", "2022-01-01", "9999-01-01", "10000.00", null);
     }
 
-    public Account GetAccountDetails(string accountId)
+    /// <summary>
+    /// Retrieves the details of a specific account asynchronously.
+    /// </summary>
+    /// <param name="accountId">The ID of the account to retrieve.</param>
+    /// <returns>A task representing the asynchronous operation, containing the account details if found, or null otherwise.</returns>
+    public async Task<Account> GetAccountDetailsAsync(string accountId)
     {
         ValidateAccountId(accountId);
-        return _accounts.TryGetValue(accountId, out var account) ? account : null;
+        return await Task.FromResult(_accounts.TryGetValue(accountId, out var account) ? account : null);
     }
 
-    public PaymentMethod GetPaymentMethodDetails(string paymentMethodId)
+    public async Task<PaymentMethod> GetPaymentMethodDetailsAsync(string paymentMethodId)
     {
         ValidateAccountId(paymentMethodId);
-        return _paymentMethods.TryGetValue(paymentMethodId, out var paymentMethod) ? paymentMethod : null;
+        return await Task.FromResult(_paymentMethods.TryGetValue(paymentMethodId, out var paymentMethod) ? paymentMethod : null);
     }
 
-    public List<Beneficiary> GetRegisteredBeneficiary(string accountId)
+    public async Task<List<Beneficiary>> GetRegisteredBeneficiaryAsync(string accountId)
     {
         ValidateAccountId(accountId);
 
         // Return dummy list of beneficiaries
-        return new List<Beneficiary>
+        var beneficiaries = new List<Beneficiary>
             {
                 new Beneficiary("1", "Mike ThePlumber", "123456789", "Intesa Sanpaolo"),
                 new Beneficiary("2", "Jane TheElectrician", "987654321", "UBS")
             };
+        return await Task.FromResult(beneficiaries);
     }
+
+    // Optionally keep the old synchronous methods if needed, or remove them if not required.
 
     private void ValidateAccountId(string accountId)
     {

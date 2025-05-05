@@ -5,9 +5,9 @@ public class ChatController : ControllerBase
 {
     private readonly ILogger<ChatController> _logger;
 
-    private AgentRouter _agenticRouter;
+    private IAgentRouter _agenticRouter;
 
-    public ChatController(ILogger<ChatController> logger, AgentRouter agenticRouter)
+    public ChatController(ILogger<ChatController> logger, IAgentRouter agenticRouter)
     {
         _logger = logger;
         _agenticRouter = agenticRouter;

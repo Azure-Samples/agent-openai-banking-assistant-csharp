@@ -1,38 +1,71 @@
-﻿
-public class TransactionsReportingAgent
+﻿/// <summary>
+/// Represents an agent responsible for handling transaction history and reporting-related operations.
+/// </summary>
+public class TransactionsReportingAgent : ITransactionsReportingAgent
 {
-    public ChatCompletionAgent agent;
+    public ChatCompletionAgent? _agent;
     private ILogger _logger;
+    private readonly IUserService _userService;
+    private readonly IConfiguration _configuration;
+    private readonly Kernel _kernel;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransactionsReportingAgent"/> class.
+    /// </summary>
+    /// <param name="kernel">The kernel instance for managing plugins and functions.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="userService">The user service for retrieving logged-in user information.</param>
+    /// <param name="logger">The logger instance for logging operations.</param>
     public TransactionsReportingAgent(Kernel kernel, IConfiguration configuration, IUserService userService, ILogger<TransactionsReportingAgent> logger)
     {
+        _userService = userService;
+        _configuration = configuration;
+        _kernel = kernel.Clone();
         _logger = logger;
-        Kernel toolKernel = kernel.Clone();
+    }
 
-        var transactionApiURL = configuration["BackendAPIs:TransactionsApiUrl"];
-        var accountsApiURL = configuration["BackendAPIs:AccountsApiUrl"];
-        // sse is required to enable the mcp client to communicate using server-sent events (http)
-        accountsApiURL += "/sse";
+    /// <summary>
+    /// Gets the <see cref="ChatCompletionAgent"/> instance, creating it if it does not already exist.
+    /// </summary>
+    public ChatCompletionAgent Agent
+    {
+        get
+        {
+            if (_agent == null)
+            {
+                _agent = CreateAgentAsync().GetAwaiter().GetResult();
+            }
+            return _agent;
+        }
+    }
 
-        AgenticUtils.AddOpenAPIPlugin(
-           kernel: toolKernel,
-           pluginName: "TransactionHistoryPlugin",
-           apiName: "transaction-history",
-           apiUrl: transactionApiURL
-        );
+    /// <summary>
+    /// Asynchronously creates a new <see cref="ChatCompletionAgent"/> instance.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created <see cref="ChatCompletionAgent"/>.</returns>
+    private async Task<ChatCompletionAgent> CreateAgentAsync()
+    {
 
-        AgenticUtils.AddMcpServerPlugin(
-            kernel: toolKernel,
+        var accountTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "AccountPlugins",
-            apiUrl: accountsApiURL
+            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/sse"
         );
 
-        this.agent =
-        new()
+        _kernel.Plugins.AddFromFunctions("AccountPlugins", accountTools.Select(mcpTools => mcpTools.AsKernelFunction()));
+
+        AgenticUtils.AddOpenAPIPlugin(
+           kernel: _kernel,
+           pluginName: "TransactionHistoryPlugin",
+           apiName: "transaction-history",
+           apiUrl: _configuration["BackendAPIs:TransactionsApiUrl"]
+        );
+
+        return new()
         {
             Name = "TransactionsReportingAgent",
-            Instructions = String.Format(AgentInstructions.TransactionsReportingAgentInstructions, userService.GetLoggedUser()),
-            Kernel = toolKernel,
+            Instructions = String.Format(AgentInstructions.TransactionsReportingAgentInstructions, _userService.GetLoggedUser()),
+            Kernel = _kernel,
             Arguments =
             new KernelArguments(
                 new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() }

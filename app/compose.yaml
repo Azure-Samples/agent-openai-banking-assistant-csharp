@@ -28,13 +28,13 @@ services:
       - AZURE_CLIENT_SECRET=${servicePrincipalPassword}
 
   account:
-    image: agent-openai-banking-assistant-csharp/business-account-api
+    image: agent-openai-banking-assistant-csharp/business-account-mcp
     build:
-      context: ./business-api/account-api
+      context: ./business-api/account-mcp
   payment:
-    image: agent-openai-banking-assistant-csharp/business-payment-api
+    image: agent-openai-banking-assistant-csharp/business-payment-mcp
     build:
-      context: ./business-api/payment-api
+      context: ./business-api/payment-mcp
     environment:
       - DOTNET_BackendAPIs__TransactionsApiUrl=http://transaction:8080
   transaction:
