@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>payment_api</RootNamespace>
+    <RootNamespace>payment_mcp</RootNamespace>
     <UserSecretsId>5cadd4fa-e824-4946-a758-16b4a25c144f</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>

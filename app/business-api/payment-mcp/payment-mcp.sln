@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35913.81 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "payment-api", "payment-api.csproj", "{2498C263-A1D3-434B-9E9E-B310C7A56EBD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "payment-mcp", "payment-mcp.csproj", "{2498C263-A1D3-434B-9E9E-B310C7A56EBD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

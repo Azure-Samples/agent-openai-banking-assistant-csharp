@@ -1,12 +1,11 @@
-﻿public class IntentExtractorAgent
+﻿/// <summary>
+/// Represents an agent responsible for extracting user intent from chat history.
+/// </summary>
+public class IntentExtractorAgent : IIntentExtractorAgent
 {
-
     private IChatCompletionService _chatCompletionService;
-
     private Kernel _kernel;
-
-    private ILogger _logger;
-
+    private readonly ILogger<IntentExtractorAgent> _logger;
 
     private string INTENT_SYSTEM_MESSAGE = $$$"""
             You are a personal financial advisor who help bank customers manage their banking accounts and services.
@@ -27,13 +26,24 @@
             
             """;
 
-    public IntentExtractorAgent(Kernel kernel, IConfiguration configuration, ILogger logger) 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IntentExtractorAgent"/> class.
+    /// </summary>
+    /// <param name="kernel">The kernel instance for managing plugins and functions.</param>
+    /// <param name="chatCompletionService">The chat completion service for processing chat history.</param>
+    /// <param name="logger">The logger instance for logging operations.</param>
+    public IntentExtractorAgent(Kernel kernel, IChatCompletionService chatCompletionService, ILogger<IntentExtractorAgent> logger)
     {
-        _chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+        _chatCompletionService = chatCompletionService;
         _kernel = kernel;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Runs the intent extraction process on the provided chat history.
+    /// </summary>
+    /// <param name="userChatHistory">The user's chat history.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the extracted intent response.</returns>
     public async Task<IntentResponse> Run(ChatHistory userChatHistory)
     {
         var agentchatHistory = new ChatHistory();
@@ -79,7 +89,11 @@
         return new IntentResponse(intentType, clarifySentence.ToString() ?? "");
     }
 
-    ChatHistory fewShotExamples()
+    /// <summary>
+    /// Provides a set of few-shot examples for intent extraction.
+    /// </summary>
+    /// <returns>A <see cref="ChatHistory"/> containing few-shot examples.</returns>
+    private ChatHistory fewShotExamples()
     {
         var examplesHistory = new ChatHistory();
 

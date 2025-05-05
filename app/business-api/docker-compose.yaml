@@ -2,10 +2,10 @@ version: '3.8'
 
 services:
   # Payments Service
-  payment-api:
+  payment-mcp:
     build:
-      context: ./payment-api
-    container_name: payment-api
+      context: ./payment-mcp
+    container_name: payment-mcp
     ports:
       - "5001:8080"
     environment:
@@ -27,10 +27,10 @@ services:
       - business-api-network
 
   # Additional Service (generic placeholder)
-  account-api:
+  account-mcp:
     build:
-      context: ./account-api
-    container_name: account-api
+      context: ./account-mcp
+    container_name: account-mcp
     ports:
       - "5003:8080"
     environment:

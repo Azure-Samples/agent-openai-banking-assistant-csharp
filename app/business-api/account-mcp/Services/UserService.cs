@@ -2,6 +2,9 @@
 {
     private readonly Dictionary<string, Account> _accounts;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserService"/> class.
+    /// </summary>
     public UserService()
     {
         _accounts = new Dictionary<string, Account>
@@ -45,13 +48,18 @@
         };
     }
 
-    public List<Account> GetAccountsByUserName(string userName)
+    /// <summary>
+    /// Retrieves the list of accounts associated with a specific username.
+    /// </summary>
+    /// <param name="userName">The username of the user.</param>
+    /// <returns>A task representing the asynchronous operation, containing the list of accounts.</returns>
+    public Task<List<Account>> GetAccountsByUserNameAsync(string userName)
     {
         if (string.IsNullOrEmpty(userName))
-            return new List<Account>();
+            return Task.FromResult(new List<Account>());
 
-        return _accounts.TryGetValue(userName, out var account)
+        return Task.FromResult(_accounts.TryGetValue(userName, out var account)
             ? new List<Account> { account }
-            : new List<Account>();
+            : new List<Account>());
     }
 }
