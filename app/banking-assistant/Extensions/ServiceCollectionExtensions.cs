@@ -28,7 +28,6 @@
         services.AddSingleton<DocumentIntelligenceClient>(provider =>
         {
             var endpoint = configuration["DocumentIntelligence:Endpoint"];
-            var apiKey = configuration["DocumentIntelligence:ApiKey"];
             var credential = new DefaultAzureCredential();
             return new DocumentIntelligenceClient(new Uri(endpoint), credential);
         });
@@ -46,7 +45,8 @@
         services.AddSingleton<IUserService, LoggedUserService>();
 
         // Register Agent Router
-        services.AddSingleton<IAgentRouter, AgentRouter>();
+        services.AddTransient<IAgentRouter, AgentRouter>();
+        
         // Register Intent Extractor Agent
         services.AddSingleton<IIntentExtractorAgent, IntentExtractorAgent>();
         // Register Account Agent
