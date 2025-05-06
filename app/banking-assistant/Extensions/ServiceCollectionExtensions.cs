@@ -28,7 +28,6 @@
         services.AddSingleton<DocumentIntelligenceClient>(provider =>
         {
             var endpoint = configuration["DocumentIntelligence:Endpoint"];
-            var apiKey = configuration["DocumentIntelligence:ApiKey"];
             var credential = new DefaultAzureCredential();
             return new DocumentIntelligenceClient(new Uri(endpoint), credential);
         });

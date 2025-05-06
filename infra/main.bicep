@@ -169,20 +169,12 @@ module copilot 'app/copilot.bicep' = {
         value: openAi.outputs.endpoint
       }
       {
-        name: 'DOTNET_AzureOpenAI__ApiKey'
-        value: openAi.outputs.key
-      }
-      {
         name: 'DOTNET_AzureOpenAI__Deployment'
         value: chatGptDeploymentName
       }
       {
         name: 'DOTNET_DocumentIntelligence__Endpoint'
         value: documentIntelligence.outputs.endpoint
-      }
-      {
-        name: 'DOTNET_DocumentIntelligence__ApiKey'
-        value: documentIntelligence.outputs.key
       }
       {
         name: 'DOTNET_BackendAPIs__TransactionsApiUrl'
@@ -212,7 +204,7 @@ module copilot 'app/copilot.bicep' = {
   }
 }
 
-// Business Account Api
+// Business Account Mcp
 module account 'app/account.bicep' = {
   name: 'account'
   scope: resourceGroup
@@ -248,7 +240,7 @@ module transaction 'app/transaction.bicep' = {
   }
 }
 
-// Business Transactions Api
+// Business Transactions Mcp
 module payment 'app/payment.bicep' = {
   name: 'payment'
   scope: resourceGroup
@@ -410,13 +402,11 @@ output AZURE_OPENAI_CHATGPT_MODEL string = chatGptModelName
 output AZURE_OPENAI_SERVICE string =  openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name 
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
-output AZURE_OPENAI_APIKEY string = openAi.outputs.key
 output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
 
 
 output AZURE_DOCUMENT_INTELLIGENCE_SERVICE string = documentIntelligence.outputs.name
 output AZURE_DOCUMENT_INTELLIGENCE_SERVICE_ENDPOINT string = documentIntelligence.outputs.endpoint
-output AZURE_DOCUMENT_INTELLIGENCE_SERVICE_APIKEY string = documentIntelligence.outputs.key
 output AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP string = documentIntelligenceResourceGroup.name
 
 
