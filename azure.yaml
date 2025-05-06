@@ -11,7 +11,7 @@ services:
     docker:
       remoteBuild: true
   account:
-    project: ./app/business-tools/account-mcp
+    project: app/business-tools/account-mcp
     language: dotnet
     host: containerapp
     docker:
