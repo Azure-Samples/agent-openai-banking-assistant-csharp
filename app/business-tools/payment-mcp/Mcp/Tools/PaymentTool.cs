@@ -22,37 +22,10 @@ public class PaymentTool
     /// <summary>
     /// Submits a payment request asynchronously.
     /// </summary>
-    /// <param name="accountId">ID of the account.</param>
-    /// <param name="description">Description of the payment.</param>
-    /// <param name="recipientName">Name of the recipient.</param>
-    /// <param name="recipientBankCode">Bank code of the recipient.</param>
-    /// <param name="amount">Amount of the payment.</param>
-    /// <param name="timestamp">Timestamp of the payment.</param>
-    /// <param name="paymentType">Type of the payment (optional).</param>
-    /// <param name="paymentMethodId">ID of the payment method (optional).</param>
-    /// <returns>A string indicating the result of the payment processing.</returns>
+    /// <param name="payment">Payment information.</param>
     [McpServerTool(Name = "SubmitPayment"), Description("Submit a payment request.")]
-    public async Task<string> SubmitPaymentAsync(
-    [Description("ID of the account")] string accountId,
-    [Description("Description of the payment")] string description,
-    [Description("Name of the recipient")] string recipientName,
-    [Description("Bank code of the recipient")] string recipientBankCode,
-    [Description("Amount of the payment")] string amount,
-    [Description("Timestamp of the payment")] string timestamp,
-    [Description("Type of the payment")] string? paymentType = null,
-    [Description("ID of the payment method")] string? paymentMethodId = null)
+    public async Task<string> SubmitPaymentAsync([Description("Payment to submit.")]Payment payment)
     {
-        var payment = new Payment
-        {
-            AccountId = accountId,
-            Description = description,
-            RecipientName = recipientName,
-            RecipientBankCode = recipientBankCode,
-            Amount = amount,
-            Timestamp = timestamp,
-            PaymentType = paymentType,
-            PaymentMethodId = paymentMethodId
-        };
 
         _logger.LogInformation("Received payment request: {Payment}", payment);
 

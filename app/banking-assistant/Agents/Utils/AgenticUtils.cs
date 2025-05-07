@@ -66,17 +66,19 @@ internal class AgenticUtils
     /// <param name="clientName">The name of the MCP client.</param>
     /// <param name="pluginName">The name of the plugin.</param>
     /// <param name="apiUrl">The URL of the MCP server.</param>
+    /// <param name="useStreamableHttp">Indicates whether to use streamable HTTP.  Default false will use SSE </param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a list of <see cref="McpClientTool"/>.</returns>
-    public static async Task<IList<McpClientTool>> AddMcpServerPluginAsync(string clientName, string pluginName, string apiUrl)
+    public static async Task<IList<McpClientTool>> AddMcpServerPluginAsync(string clientName, string pluginName, string apiUrl, bool useStreamableHttp = false)
     {
         // Create a new MCP client using the SseClientTransport
         var mcpClient = await McpClientFactory.CreateAsync(
                 new SseClientTransport(
-                    new SseClientTransportOptions() { Endpoint = new Uri(apiUrl), Name = clientName }));
+                    new SseClientTransportOptions() { Endpoint = new Uri(apiUrl), Name = clientName, UseStreamableHttp  = useStreamableHttp }));
 
         // Retrieve and display the list provided by the MCP server
         return await mcpClient.ListToolsAsync();
 
     }
+
 }
 

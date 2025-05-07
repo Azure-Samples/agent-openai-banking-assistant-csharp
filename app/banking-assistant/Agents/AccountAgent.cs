@@ -50,7 +50,8 @@ public class AccountAgent : IAccountAgent
         var tools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: _pluginName,
-            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/sse"
+            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
+            useStreamableHttp: true
         );
 
         _kernel.Plugins.AddFromFunctions(_pluginName, tools.Select(mcpTools => mcpTools.AsKernelFunction()));

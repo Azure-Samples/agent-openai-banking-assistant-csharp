@@ -50,13 +50,15 @@ public class PaymentAgent : IPaymentAgent
         var paymentTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "PaymentsPlugins",
-            apiUrl: _configuration["BackendAPIs:PaymentsApiUrl"] + "/sse"
+            apiUrl: _configuration["BackendAPIs:PaymentsApiUrl"] + "/mcp",
+            useStreamableHttp: true
         );
 
         var accountTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "AccountPlugins",
-            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/sse"
+            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
+            useStreamableHttp: true
         );
 
         _kernel.Plugins.AddFromFunctions("PaymentsPlugins", paymentTools.Select(mcpTools => mcpTools.AsKernelFunction()));
@@ -71,6 +73,12 @@ public class PaymentAgent : IPaymentAgent
 
         _kernel.ImportPluginFromType<InvoiceScanPlugin>(nameof(InvoiceScanPlugin));
 
+        // Special call out of RetainArugumentTypes. The Payments plug takes object as input instead of string.
+        var executionSettigs = new AzureOpenAIPromptExecutionSettings()
+        {
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(options: new() { RetainArgumentTypes = true })
+        };
+
         return new()
         {
             Name = "PaymentAgent",
@@ -78,7 +86,7 @@ public class PaymentAgent : IPaymentAgent
             Kernel = _kernel,
             Arguments =
             new KernelArguments(
-                new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() }
+                executionSettings: executionSettigs
             )
         };
     }

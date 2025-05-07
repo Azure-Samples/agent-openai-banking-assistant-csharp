@@ -49,7 +49,8 @@ public class TransactionsReportingAgent : ITransactionsReportingAgent
         var accountTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "AccountPlugins",
-            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/sse"
+            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
+            useStreamableHttp: true
         );
 
         _kernel.Plugins.AddFromFunctions("AccountPlugins", accountTools.Select(mcpTools => mcpTools.AsKernelFunction()));
