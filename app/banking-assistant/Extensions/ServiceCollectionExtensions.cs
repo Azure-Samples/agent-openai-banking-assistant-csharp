@@ -45,7 +45,8 @@
         services.AddSingleton<IUserService, LoggedUserService>();
 
         // Register Agent Router
-        services.AddSingleton<IAgentRouter, AgentRouter>();
+        services.AddTransient<IAgentRouter, AgentRouter>();
+        
         // Register Intent Extractor Agent
         services.AddSingleton<IIntentExtractorAgent, IntentExtractorAgent>();
         // Register Account Agent
