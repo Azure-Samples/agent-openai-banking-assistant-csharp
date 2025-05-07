@@ -15,5 +15,7 @@ global using Microsoft.SemanticKernel.Agents.Chat;
 global using Microsoft.SemanticKernel.ChatCompletion;
 global using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 
+global using ModelContextProtocol.Client;
+global using ModelContextProtocol.Protocol.Transport;
 
 global using agent_openai_banking_assistant_csharp.Interfaces;

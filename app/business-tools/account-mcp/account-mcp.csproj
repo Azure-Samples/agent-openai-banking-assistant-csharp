@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>account_mcp</RootNamespace>
+    <UserSecretsId>b437e486-d868-44de-b6e8-11868ae40c39</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.1.0-preview.12" />
+    <PackageReference Include="ModelContextProtocol" Version="0.1.0-preview.12" />
+  </ItemGroup>
+
+</Project>

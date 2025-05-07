@@ -18,7 +18,7 @@
      {0}
      
      Don't try to guess accountId,paymentMethodId from the conversation.When submitting payment always use functions to retrieve accountId, paymentMethodId.
-     
+     If timestamp is not provided, use current datetime.
      """;
 
         public static string TransactionsReportingAgentInstructions = $$$"""
@@ -29,6 +29,7 @@
 
     Always use the below logged user details to search the transactions:
     {0}
+
     """;
     
 

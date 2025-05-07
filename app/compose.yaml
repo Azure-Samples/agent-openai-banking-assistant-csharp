@@ -14,27 +14,30 @@ services:
       - DOTNET_Storage__ContainerName=${AZURE_STORAGE_CONTAINER}
       - DOTNET_AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
       - DOTNET_AzureOpenAI__Deployment=${AZURE_OPENAI_CHATGPT_DEPLOYMENT}
-      - DOTNET_AzureOpenAI__ApiKey=${AZURE_OPENAI_API_KEY}
-      - DOTNET_DocumentIntelligence__ApiKey=${AZURE_DOCUMENT_INTELLIGENCE_API_KEY}
-      - DOTNET_DocumentIntelligence__Endpoint=${AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT}
+      - DOTNET_DocumentIntelligence__Endpoint=${AZURE_DOCUMENT_INTELLIGENCE_SERVICE_ENDPOINT}
       - DOTNET_BackendAPIs__AccountsApiUrl=http://account:8080
       - DOTNET_BackendAPIs__PaymentsApiUrl=http://payment:8080
       - DOTNET_BackendAPIs__TransactionsApiUrl=http://transaction:8080
       - DOTNET_AzureAd__ClientId=${servicePrincipal}
       - DOTNET_AzureAd__TenantId=${servicePrincipalTenant}
+      - DOTNET_ApplicationInsights__Active=false
+      - AZURE_CLIENT_ID=${servicePrincipal}
+      - AZURE_TENANT_ID=${servicePrincipalTenant}
+      - AZURE_CLIENT_SECRET=${servicePrincipalPassword}
+
   account:
-    image: agent-openai-banking-assistant-csharp/business-account-api
+    image: agent-openai-banking-assistant-csharp/business-account-mcp
     build:
-      context: ./business-api/account-api
+      context: ./business-tools/account-mcp
   payment:
-    image: agent-openai-banking-assistant-csharp/business-payment-api
+    image: agent-openai-banking-assistant-csharp/business-payment-mcp
     build:
-      context: ./business-api/payment-api
+      context: ./business-tools/payment-mcp
     environment:
       - DOTNET_BackendAPIs__TransactionsApiUrl=http://transaction:8080
   transaction:
     image: agent-openai-banking-assistant-csharp/business-transaction-api
     build:
-      context: ./business-api/transactions-api
+      context: ./business-tools/transactions-api
 
 

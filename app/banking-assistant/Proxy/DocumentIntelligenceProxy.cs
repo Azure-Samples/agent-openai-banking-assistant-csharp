@@ -7,14 +7,14 @@ public class DocumentIntelligenceProxy : IDocumentScanner
 
     private readonly DocumentIntelligenceClient _documentIntelligenceClient;
 
-    private ILogger _logger;
+    private readonly ILogger<DocumentIntelligenceProxy> _logger;
 
 
-    public DocumentIntelligenceProxy(IBlobStorage blobStorageProxy, DocumentIntelligenceClient documentIntelligenceClient, ILoggerFactory loggerFactory)
+    public DocumentIntelligenceProxy(IBlobStorage blobStorageProxy, DocumentIntelligenceClient documentIntelligenceClient, ILogger<DocumentIntelligenceProxy> logger)
     {
         _blobStorageProxy = blobStorageProxy;
         _documentIntelligenceClient = documentIntelligenceClient;
-        _logger = loggerFactory.CreateLogger<DocumentIntelligenceProxy>();
+        _logger = logger;
     }
 
     public async Task<Dictionary<string, string>> Scan(string fileName)

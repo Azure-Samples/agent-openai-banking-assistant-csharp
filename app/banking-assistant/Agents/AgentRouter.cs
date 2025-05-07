@@ -1,31 +1,31 @@
 ﻿
 using Microsoft.Extensions.Logging;
 
-public class AgentRouter
+public class AgentRouter: IAgentRouter
 {
     private ILogger<AgentRouter> _logger;
-    private IntentExtractorAgent _intentExtractorAgent;
-    private PaymentAgent _paymentAgent;
-    private AccountAgent _accountAgent;
-    private TransactionsReportingAgent _transactionsReportingAgent;
+    private IIntentExtractorAgent _intentExtractorAgent;
     private Kernel _kernel;
-    public AgentRouter(Kernel kernel, IConfiguration configuration, IDocumentScanner documentScanner, ILoggerFactory loggerFactory, IUserService userService)
+
+    private ChatCompletionAgent _paymentAgent, _accountAgent, _transactionsReportingAgent;
+    public AgentRouter(Kernel kernel, ILogger<AgentRouter> logger, IIntentExtractorAgent intentExtractorAgent, IPaymentAgent paymentAgent, IAccountAgent accountAgent, ITransactionsReportingAgent transactionsReportingAgent)
     {
         _kernel = kernel;
-        _intentExtractorAgent = new IntentExtractorAgent(kernel, configuration, loggerFactory.CreateLogger<IntentExtractorAgent>());
-        _transactionsReportingAgent = new TransactionsReportingAgent(kernel, configuration, userService, loggerFactory.CreateLogger<TransactionsReportingAgent>());
-        _accountAgent = new AccountAgent(kernel, configuration, loggerFactory.CreateLogger<AccountAgent>());
-        _paymentAgent = new PaymentAgent(kernel, configuration, documentScanner, userService, loggerFactory);
-        _logger = loggerFactory.CreateLogger<AgentRouter>();
+        _intentExtractorAgent = intentExtractorAgent;
+        _accountAgent = ((AccountAgent)accountAgent).Agent;
+        _paymentAgent = ((PaymentAgent)paymentAgent).Agent;
+        _transactionsReportingAgent = ((TransactionsReportingAgent)transactionsReportingAgent).Agent;
+
+        _logger = logger;
     }
+
 #pragma warning disable SKEXP0110 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     public async Task Run(ChatHistory chatHistory, AgentContext agentContext)
     {
         _logger.LogInformation("======== Router Agent: Starting ========");
         _logger.LogInformation(chatHistory[chatHistory.Count - 1].Content);
-        IntentResponse intentResponse = _intentExtractorAgent.Run(chatHistory).Result;
+        IntentResponse intentResponse = await _intentExtractorAgent.Run(chatHistory);
         _logger.LogInformation($"Intent Type for chat conversation is {intentResponse.intentType.ToString()}");
-
 
         KernelFunction selectionFunction =
         AgentGroupChat.CreatePromptFunctionForStrategy(
@@ -83,7 +83,7 @@ public class AgentRouter
             };
 
         AgentGroupChat chat =
-            new(_paymentAgent.agent, _transactionsReportingAgent.agent, _accountAgent.agent)
+            new( _accountAgent, _paymentAgent, _transactionsReportingAgent)
             {
                 ExecutionSettings = new() { SelectionStrategy = selectionStrategy, TerminationStrategy = terminationStrategy }
             };

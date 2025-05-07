@@ -1,10 +1,14 @@
 ﻿using Microsoft.SemanticKernel.Plugins.OpenApi;
-using Microsoft.SemanticKernel;
 using System.Reflection;
 
-public class AgenticUtils
+internal class AgenticUtils
 {
-    //protected readonly IToolsExecutionCache _toolsExecutionCache;
+    /// <summary>
+    /// Retrieves the embedded YAML file stream for the specified API name.
+    /// </summary>
+    /// <param name="apiName">The name of the API whose YAML file is to be retrieved.</param>
+    /// <returns>A <see cref="Stream"/> containing the YAML file content.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the resource is not found or an error occurs while reading the file.</exception>
     private static Stream? GetAPIYaml(string apiName)
     {
         try
@@ -34,6 +38,14 @@ public class AgenticUtils
             throw new InvalidOperationException("Error reading the embedded YAML file.", ex);
         }
     }
+
+    /// <summary>
+    /// Adds an OpenAPI plugin to the specified kernel.
+    /// </summary>
+    /// <param name="kernel">The kernel to which the plugin will be added.</param>
+    /// <param name="apiName">The name of the API for which the plugin is created.</param>
+    /// <param name="pluginName">The name of the plugin.</param>
+    /// <param name="apiUrl">The URL of the API server.</param>
     public static async void AddOpenAPIPlugin(Kernel kernel, string apiName, string pluginName, string apiUrl)
     {
         var stream = GetAPIYaml(apiName);
@@ -46,6 +58,25 @@ public class AgenticUtils
         KernelPlugin plugin = await OpenApiKernelPluginFactory.CreateFromOpenApiAsync(pluginName, stream!, parameters);
 
         kernel.Plugins.Add(plugin);
+    }
+
+    /// <summary>
+    /// Adds an MCP server plugin and retrieves the list of tools provided by the server.
+    /// </summary>
+    /// <param name="clientName">The name of the MCP client.</param>
+    /// <param name="pluginName">The name of the plugin.</param>
+    /// <param name="apiUrl">The URL of the MCP server.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of <see cref="McpClientTool"/>.</returns>
+    public static async Task<IList<McpClientTool>> AddMcpServerPluginAsync(string clientName, string pluginName, string apiUrl)
+    {
+        // Create a new MCP client using the SseClientTransport
+        var mcpClient = await McpClientFactory.CreateAsync(
+                new SseClientTransport(
+                    new SseClientTransportOptions() { Endpoint = new Uri(apiUrl), Name = clientName }));
+
+        // Retrieve and display the list provided by the MCP server
+        return await mcpClient.ListToolsAsync();
+
     }
 }
 

@@ -25,8 +25,8 @@ jobs:
       env-name: ${{steps.set-deploy-env.outputs.DEPLOY_ENVIRONMENT}}
       build-banking-assistant: ${{ steps.changes.outputs.banking-assistant }}
       build-frontend: ${{ steps.changes.outputs.frontend }}
-      build-account-api: ${{ steps.changes.outputs.account-api }}
-      build-payment-api: ${{ steps.changes.outputs.payment-api }}
+      build-account-mcp: ${{ steps.changes.outputs.account-mcp }}
+      build-payment-mcp: ${{ steps.changes.outputs.payment-mcp }}
       build-transactions-api: ${{ steps.changes.outputs.transactions-api }}
       aca-dev-env-name: ${{ vars.ACA_DEV_ENV_NAME }}
       aca-accounts-app-name: ${{ vars.ACCOUNTS_ACA_DEV_APP_NAME }}
@@ -45,12 +45,12 @@ jobs:
                 - 'app/banking-assistant/**'
               frontend:
                 - 'app/frontend/**'
-              account-api:
-                - 'app/business-api/account-api/**'
-              payment-api:
-                - 'app/business-api/payment-api/**'
+              account-mcp:
+                - 'app/business-tools/account-mcp/**'
+              payment-mcp:
+                - 'app/business-tools/payment-mcp/**'
               transactions-api:
-                - 'app/business-api/transactions-api/**'
+                - 'app/business-tools/transactions-api/**'
 
       - name: Set environment for branch
         id: set-deploy-env
@@ -71,21 +71,21 @@ jobs:
           fi
   build-account-app:
     needs: changes-detection
-    if : ${{ needs.changes-detection.outputs.build-account-api == 'true' }}
+    if : ${{ needs.changes-detection.outputs.build-account-mcp == 'true' }}
     uses: ./.github/workflows/acr-build-push.yaml
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
-      image-name: agent-openai-banking-assistant-csharp/account-api
-      app-folder-path: ./app/business-api/account-api
+      image-name: agent-openai-banking-assistant-csharp/account-mcp
+      app-folder-path: ./app/business-tools/account-mcp
     secrets: inherit
   
   deploy-account-app:
     needs: [changes-detection,build-account-app]
-    if: ${{ needs.changes-detection.outputs.build-account-api == 'true' }}
+    if: ${{ needs.changes-detection.outputs.build-account-mcp == 'true' }}
     uses: ./.github/workflows/aca-deploy.yaml
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
-      image-name: agent-openai-banking-assistant-csharp/account-api
+      image-name: agent-openai-banking-assistant-csharp/account-mcp
       container-app-env-name: ${{ needs.changes-detection.outputs.aca-dev-env-name }}
       container-app-name: ${{ needs.changes-detection.outputs.aca-accounts-app-name }}
     secrets: inherit
@@ -97,7 +97,7 @@ jobs:
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
       image-name: agent-openai-banking-assistant-csharp/transactions-api
-      app-folder-path: ./app/business-api/transactions-api
+      app-folder-path: ./app/business-tools/transactions-api
     secrets: inherit
   
   deploy-transactions-app:
@@ -113,21 +113,21 @@ jobs:
 
   build-payment-app:
     needs: changes-detection
-    if : ${{ needs.changes-detection.outputs.build-payment-api == 'true' }}
+    if : ${{ needs.changes-detection.outputs.build-payment-mcp == 'true' }}
     uses: ./.github/workflows/acr-build-push.yaml
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
-      image-name: agent-openai-banking-assistant-csharp/payment-api
-      app-folder-path: ./app/business-api/payment-api
+      image-name: agent-openai-banking-assistant-csharp/payment-mcp
+      app-folder-path: ./app/business-tools/payment-mcp
     secrets: inherit
   
   deploy-payment-app:
     needs: [changes-detection,build-payment-app]
-    if: ${{ needs.changes-detection.outputs.build-payment-api == 'true' }}
+    if: ${{ needs.changes-detection.outputs.build-payment-mcp == 'true' }}
     uses: ./.github/workflows/aca-deploy.yaml
     with:
       env-name: ${{ needs.changes-detection.outputs.env-name}}
-      image-name: agent-openai-banking-assistant-csharp/payment-api
+      image-name: agent-openai-banking-assistant-csharp/payment-mcp
       container-app-env-name: ${{ needs.changes-detection.outputs.aca-dev-env-name }}
       container-app-name: ${{ needs.changes-detection.outputs.aca-payments-app-name }}
     secrets: inherit
