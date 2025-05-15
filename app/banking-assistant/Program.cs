@@ -26,6 +26,12 @@ foreach (var kvp in allKeys)
 // @TODO: Temporary. Fix later.
 builder.Services.AddCors(options => options.AddPolicy("allowSpecificOrigins", policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
+// Bind Backend Services uri settings
+builder.Services.AddOptions<BackendApisOption>()
+        .Bind(builder.Configuration.GetSection("BackendAPIs"))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+
 // Configure authentication using Azure AD
 if (builder.Environment.IsDevelopment())
 {
