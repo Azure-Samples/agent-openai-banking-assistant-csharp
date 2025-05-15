@@ -1,4 +1,5 @@
-﻿/// <summary>
+﻿
+/// <summary>
 /// Represents an agent responsible for handling payment-related operations.
 /// </summary>
 public class PaymentAgent : IPaymentAgent
@@ -6,7 +7,7 @@ public class PaymentAgent : IPaymentAgent
     private ChatCompletionAgent? _agent; // Marked as nullable
     private ILogger<PaymentAgent> _logger;
     private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
+    private IOptions<BackendApisOption> _backendApisOptions;
     private readonly Kernel _kernel;
 
     /// <summary>
@@ -17,11 +18,11 @@ public class PaymentAgent : IPaymentAgent
     /// <param name="documentScanner">The document scanner for scanning invoices.</param>
     /// <param name="userService">The user service for retrieving logged-in user information.</param>
     /// <param name="logger">The logger instance for logging operations.</param>
-    public PaymentAgent(Kernel kernel, IConfiguration configuration, IDocumentScanner documentScanner, IUserService userService, ILogger<PaymentAgent> logger)
+    public PaymentAgent(Kernel kernel, IOptions<BackendApisOption> backendApisOptions, IDocumentScanner documentScanner, IUserService userService, ILogger<PaymentAgent> logger)
     {
         _logger = logger;
         _userService = userService;
-        _configuration = configuration;
+        _backendApisOptions = backendApisOptions;
         _kernel = kernel.Clone();
     }
 
@@ -50,14 +51,14 @@ public class PaymentAgent : IPaymentAgent
         var paymentTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "PaymentsPlugins",
-            apiUrl: _configuration["BackendAPIs:PaymentsApiUrl"] + "/mcp",
+            apiUrl: _backendApisOptions.Value.PaymentsApiUrl + "/mcp",
             useStreamableHttp: true
         );
 
         var accountTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "AccountPlugins",
-            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
+            apiUrl: _backendApisOptions.Value.AccountsApiUrl + "/mcp",
             useStreamableHttp: true
         );
 
@@ -68,7 +69,7 @@ public class PaymentAgent : IPaymentAgent
            kernel: _kernel,
            pluginName: "TransactionHistoryPlugin",
            apiName: "transaction-history",
-           apiUrl: _configuration["BackendAPIs:TransactionsApiUrl"]
+           apiUrl: _backendApisOptions.Value.TransactionsApiUrl
         );
 
         _kernel.ImportPluginFromType<InvoiceScanPlugin>(nameof(InvoiceScanPlugin));
