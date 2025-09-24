@@ -1,4 +1,4 @@
-﻿global using Microsoft.AspNetCore.Mvc;
+﻿
 global using System.Text.Json;
 
 global using Azure;
@@ -14,6 +14,8 @@ global using Microsoft.SemanticKernel.Agents;
 global using Microsoft.SemanticKernel.Agents.Chat;
 global using Microsoft.SemanticKernel.ChatCompletion;
 global using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.Extensions.Options;
 
 global using ModelContextProtocol.Client;
 global using ModelContextProtocol.Protocol.Transport;

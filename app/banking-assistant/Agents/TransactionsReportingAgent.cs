@@ -6,7 +6,7 @@ public class TransactionsReportingAgent : ITransactionsReportingAgent
     public ChatCompletionAgent? _agent;
     private ILogger _logger;
     private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
+    private IOptions<BackendApisOption> _backendApisOptions;
     private readonly Kernel _kernel;
 
     /// <summary>
@@ -16,10 +16,10 @@ public class TransactionsReportingAgent : ITransactionsReportingAgent
     /// <param name="configuration">The application configuration.</param>
     /// <param name="userService">The user service for retrieving logged-in user information.</param>
     /// <param name="logger">The logger instance for logging operations.</param>
-    public TransactionsReportingAgent(Kernel kernel, IConfiguration configuration, IUserService userService, ILogger<TransactionsReportingAgent> logger)
+    public TransactionsReportingAgent(Kernel kernel, IOptions<BackendApisOption> backendApisOptions, IUserService userService, ILogger<TransactionsReportingAgent> logger)
     {
         _userService = userService;
-        _configuration = configuration;
+        _backendApisOptions = backendApisOptions;
         _kernel = kernel.Clone();
         _logger = logger;
     }
@@ -49,7 +49,7 @@ public class TransactionsReportingAgent : ITransactionsReportingAgent
         var accountTools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: "AccountPlugins",
-            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
+            apiUrl: _backendApisOptions.Value.AccountsApiUrl + "/mcp",
             useStreamableHttp: true
         );
 
@@ -59,7 +59,7 @@ public class TransactionsReportingAgent : ITransactionsReportingAgent
            kernel: _kernel,
            pluginName: "TransactionHistoryPlugin",
            apiName: "transaction-history",
-           apiUrl: _configuration["BackendAPIs:TransactionsApiUrl"]
+           apiUrl: _backendApisOptions.Value.TransactionsApiUrl
         );
 
         return new()
