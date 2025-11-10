@@ -1,4 +1,5 @@
-﻿/// <summary>
+﻿
+/// <summary>
 /// Represents an agent responsible for managing account-related operations.
 /// </summary>
 public class AccountAgent : IAccountAgent
@@ -6,7 +7,7 @@ public class AccountAgent : IAccountAgent
     private ChatCompletionAgent? _agent; // Marked as nullable
     private ILogger<AccountAgent> _logger;
     private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
+    private IOptions<BackendApisOption> _backendApisOptions;
     private readonly Kernel _kernel;
     private readonly string _pluginName = "AccountPlugins";
 
@@ -17,11 +18,11 @@ public class AccountAgent : IAccountAgent
     /// <param name="configuration">The application configuration.</param>
     /// <param name="userService">The user service for retrieving logged-in user information.</param>
     /// <param name="logger">The logger instance for logging operations.</param>
-    public AccountAgent(Kernel kernel, IConfiguration configuration, IUserService userService, ILogger<AccountAgent> logger)
+    public AccountAgent(Kernel kernel, IOptions<BackendApisOption> backendApisOptions, IUserService userService, ILogger<AccountAgent> logger)
     {
         _logger = logger;
         _userService = userService;
-        _configuration = configuration;
+        _backendApisOptions = backendApisOptions;
         _kernel = kernel.Clone();
     }
 
@@ -50,7 +51,7 @@ public class AccountAgent : IAccountAgent
         var tools = await AgenticUtils.AddMcpServerPluginAsync(
             clientName: "banking-assistant-client",
             pluginName: _pluginName,
-            apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
+            apiUrl: _backendApisOptions.Value.AccountsApiUrl + "/mcp",
             useStreamableHttp: true
         );
 
