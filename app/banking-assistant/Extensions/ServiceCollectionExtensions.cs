@@ -2,11 +2,19 @@
 {
     public static IServiceCollection AddAzureServices(this IServiceCollection services, IConfiguration configuration)
     {
-
+        var tenantId = configuration["AzureAd:TenantId"];
+        var credentialOptions = new DefaultAzureCredentialOptions();
+        
+        // Only set TenantId if it's provided and not null
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            credentialOptions.TenantId = tenantId;
+        }
+        
         // Register Azure Blob Service Client via the Azure Clients builder.
         services.AddSingleton<BlobServiceClient>(provider =>
         {
-            var credential = new DefaultAzureCredential();
+            var credential = new DefaultAzureCredential(credentialOptions);
             var accountName = configuration["Storage:AccountName"];
             var storageEndpoint = $"https://{accountName}.blob.core.windows.net";
             Console.WriteLine($"BlobServiceClient: {storageEndpoint}");
@@ -28,7 +36,7 @@
         services.AddSingleton<DocumentIntelligenceClient>(provider =>
         {
             var endpoint = configuration["DocumentIntelligence:Endpoint"];
-            var credential = new DefaultAzureCredential();
+            var credential = new DefaultAzureCredential(credentialOptions);
             return new DocumentIntelligenceClient(new Uri(endpoint), credential);
         });
 
@@ -39,7 +47,7 @@
         services.AddKernel().AddAzureOpenAIChatCompletion(
             deploymentName: configuration["AzureOpenAI:Deployment"],
             endpoint: configuration["AzureOpenAI:Endpoint"],
-            credentials: new DefaultAzureCredential()
+            credentials: new DefaultAzureCredential(credentialOptions)
         );
 
         services.AddSingleton<IUserService, LoggedUserService>();

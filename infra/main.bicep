@@ -390,33 +390,30 @@ output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
-
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
 output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 
 // Shared by all OpenAI deployments
-
 output AZURE_OPENAI_CHATGPT_MODEL string = chatGptModelName
+
 // Specific to Azure OpenAI
 output AZURE_OPENAI_SERVICE string =  openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name 
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
 output AZURE_OPENAI_ENDPOINT string = openAi.outputs.endpoint
 
-
 output AZURE_DOCUMENT_INTELLIGENCE_SERVICE string = documentIntelligence.outputs.name
 output AZURE_DOCUMENT_INTELLIGENCE_SERVICE_ENDPOINT string = documentIntelligence.outputs.endpoint
 output AZURE_DOCUMENT_INTELLIGENCE_RESOURCE_GROUP string = documentIntelligenceResourceGroup.name
-
-
-
 
 output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 
-
+output APPLICATION_INSIGHTS_ACTIVE string = useApplicationInsights ? 'true' : 'false'
+output APPLICATION_INSIGHTS_STRING string = useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
+output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = useApplicationInsights ? monitoring.outputs.applicationInsightsInstrumentationKey : ''
 
 // output BACKEND_URI string = backend.outputs.uri
 // output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name

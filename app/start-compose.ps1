@@ -25,8 +25,26 @@ if ([string]::IsNullOrEmpty($servicePrincipal)) {
     }
     $servicePrincipalObjectId = $(az ad sp show --id $servicePrincipal --query id --output tsv)
     Write-Host "Assigning Roles to service principal agent-banking-csharp-spi with principal id: $servicePrincipal and object id[$servicePrincipalObjectId]"
-    foreach ($role in $roles) {
-        Write-Host "Assigning Role[$role] to principal id[$servicePrincipal] for resource[/subscriptions/$($env:AZURE_SUBSCRIPTION_ID)/resourceGroups/$($env:AZURE_RESOURCE_GROUP)]"
+    
+    # Cognitive Services OpenAI User role - assign at OpenAI resource scope
+    $openAiResourceId = "/subscriptions/$($env:AZURE_SUBSCRIPTION_ID)/resourceGroups/$($env:AZURE_RESOURCE_GROUP)/providers/Microsoft.CognitiveServices/accounts/$($env:AZURE_OPENAI_SERVICE)"
+    $cognitiveServicesOpenAiUserRole = "a97b65f3-24c7-4388-baec-2e87135dc908"
+    
+    Write-Host "Assigning Cognitive Services OpenAI User Role to OpenAI resource: $openAiResourceId"
+    az role assignment create `
+        --role $cognitiveServicesOpenAiUserRole `
+        --assignee-object-id $servicePrincipalObjectId `
+        --scope $openAiResourceId `
+        --assignee-principal-type ServicePrincipal
+    
+    # Other roles - assign at resource group scope
+    $otherRoles = @(
+        "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd",
+        "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+    )
+    
+    foreach ($role in $otherRoles) {
+        Write-Host "Assigning Role[$role] to principal id[$servicePrincipal] for resource group[$($env:AZURE_RESOURCE_GROUP)]"
         az role assignment create `
             --role $role `
             --assignee-object-id $servicePrincipalObjectId `

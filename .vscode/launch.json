@@ -1,0 +1,73 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Banking Assistant",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/banking-assistant/bin/Debug/net9.0/banking-assistant.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/app/banking-assistant",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Account MCP",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/business-tools/account-mcp/bin/Debug/net9.0/account-mcp.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/app/business-tools/account-mcp",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Payment MCP",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/business-tools/payment-mcp/bin/Debug/net9.0/payment-mcp.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/app/business-tools/payment-mcp",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Transactions API",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/business-tools/transactions-api/bin/Debug/net9.0/transactions-api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/app/business-tools/transactions-api",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Frontend",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/frontend/node_modules/vite/bin/vite.js",
+            "args": ["--port=8081"],
+            "cwd": "${workspaceFolder}/app/frontend",
+            "console": "integratedTerminal"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full Stack",
+            "configurations": [
+                "Banking Assistant",
+                "Account MCP",
+                "Payment MCP",
+                "Transactions API",
+                "Frontend"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Backend Services",
+            "configurations": [
+                "Banking Assistant",
+                "Account MCP",
+                "Payment MCP",
+                "Transactions API"
+            ],
+            "stopAll": true
+        }
+    ]
+}

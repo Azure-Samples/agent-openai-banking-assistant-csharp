@@ -14,14 +14,14 @@ public class ChatController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return Ok("Chat Controller is available.");
+        return await Task.FromResult(Ok("Chat Controller is available."));
     }
 
     [HttpPost]
     [Produces("application/json")]
-    public IActionResult ChatWithOpenAI([FromBody] ChatAppRequest chatRequest)
+    public async Task<IActionResult> ChatWithOpenAI([FromBody] ChatAppRequest chatRequest)
     {
         if (!ModelState.IsValid)
         {
@@ -53,7 +53,7 @@ public class ChatController : ControllerBase
         agentContext.Add("attachments", chatRequest.Attachments);
         agentContext.Add("approach", chatRequest.Approach);
 
-        _agenticRouter.Run(chatHistory, agentContext).Wait();
+        await _agenticRouter.Run(chatHistory, agentContext);
 
         ChatResponse response = ChatResponse.BuildChatResponse(chatHistory, agentContext);
         return new JsonResult(response);

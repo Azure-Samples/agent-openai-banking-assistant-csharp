@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 public class AuthSetupController : ControllerBase
 {
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return Ok(new { UseLogin = false });
+        return await Task.FromResult(Ok(new { UseLogin = false }));
     }
 }

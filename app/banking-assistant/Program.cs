@@ -8,9 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: true)
-    .AddEnvironmentVariables("DOTNET_");
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 
-var appInsightsActive = builder.Configuration.GetValue<bool>("ApplicationInsights:Active");
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
+builder.Configuration.AddEnvironmentVariables("DOTNET_");
+
+var appInsightsActiveString = builder.Configuration.GetValue<string>("ApplicationInsights:Active") ?? "false";
+var appInsightsActive = bool.TryParse(appInsightsActiveString, out var result) && result;
+
 if (appInsightsActive)
 {
     builder.Services.AddApplicationInsightsTelemetry();
