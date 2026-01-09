@@ -1,15 +1,13 @@
+namespace AccountMcp.Mcp.Tools;
 
+/// <summary>
+/// MCP tool for managing account-related operations.
+/// </summary>
 [McpServerToolType]
-public class AccountTool
+public class AccountTool(IAccountService accountService, ILogger<AccountTool> logger)
 {
-    private readonly IAccountService _accountService;
-    private readonly ILogger<AccountTool> _logger;
-
-    public AccountTool(IAccountService accountService, ILogger<AccountTool> logger)
-    {
-        _accountService = accountService;
-        _logger = logger;
-    }
+    private readonly IAccountService _accountService = accountService;
+    private readonly ILogger<AccountTool> _logger = logger;
 
     /// <summary>
     /// Retrieves account details and available payment methods for a specific account.
@@ -17,7 +15,7 @@ public class AccountTool
     /// <param name="accountId">The ID of the specific account.</param>
     /// <returns>A task representing the asynchronous operation, containing the account details.</returns>
     [McpServerTool(Name = "GetAccountDetails"), Description("Get account details and available payment methods.")]
-    public async Task<Account> GetAccountDetailsAsync([Description("id of specific account.")] string accountId)
+    public async Task<Account?> GetAccountDetailsAsync([Description("id of specific account.")] string accountId)
     {
         _logger.LogInformation("Received request to get account details for account id: {AccountId}", accountId);
         return await _accountService.GetAccountDetailsAsync(accountId);
@@ -30,12 +28,11 @@ public class AccountTool
     /// <param name="methodId">The ID of the specific payment method available for the account.</param>
     /// <returns>A task representing the asynchronous operation, containing the payment method details.</returns>
     [McpServerTool(Name = "GetPaymentMethodDetails"), Description("Get payment method detail with available balance.")]
-    public async Task<PaymentMethod> GetPaymentMethodDetailsAsync(
+    public async Task<PaymentMethod?> GetPaymentMethodDetailsAsync(
         [Description("id of specific account.")] string accountId,
         [Description("id of specific payment method available for the account id.")] string methodId)
     {
-        _logger.LogInformation("Received request to get payment method details for account id: {AccountId} and method id: {MethodId}",
-            accountId, methodId);
+        _logger.LogInformation("Received request to get payment method details for account id: {AccountId} and method id: {MethodId}", accountId, methodId);
         return await _accountService.GetPaymentMethodDetailsAsync(methodId);
     }
 

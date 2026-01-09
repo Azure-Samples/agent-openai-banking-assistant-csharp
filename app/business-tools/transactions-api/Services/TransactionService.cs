@@ -1,4 +1,9 @@
-﻿public class TransactionService : ITransactionService
+﻿namespace TransactionsApi.Services;
+
+/// <summary>
+/// Service for managing transaction data and operations.
+/// </summary>
+public class TransactionService : ITransactionService
 {
     private Dictionary<string, List<Transaction>> LastTransactions { get; } = new();
     private Dictionary<string, List<Transaction>> AllTransactions { get; } = new();
@@ -35,11 +40,11 @@
         ValidateAccountId(accountId);
 
         if (!AllTransactions.TryGetValue(accountId, out var transactions))
-            return new List<Transaction>();
+        {
+            return [];
+        }
 
-        return transactions
-            .Where(t => t.RecipientName.ToLower().Contains(name.ToLower()))
-            .ToList();
+        return [.. transactions.Where(t => t.RecipientName.ToLower().Contains(name.ToLower()))];
     }
 
     public List<Transaction> GetLastTransactions(string accountId)
@@ -48,7 +53,7 @@
 
         return LastTransactions.TryGetValue(accountId, out var transactions)
             ? transactions
-            : new List<Transaction>();
+            : [];
     }
 
     public void NotifyTransaction(string accountId, Transaction transaction)
@@ -56,10 +61,14 @@
         ValidateAccountId(accountId);
 
         if (!AllTransactions.TryGetValue(accountId, out var allTransactionsList))
+        {
             throw new InvalidOperationException($"Cannot find all transactions for account id: {accountId}");
+        }
 
         if (!LastTransactions.TryGetValue(accountId, out var lastTransactionsList))
+        {
             throw new InvalidOperationException($"Cannot find last transactions for account id: {accountId}");
+        }
 
         allTransactionsList.Add(transaction);
         lastTransactionsList.Add(transaction);
@@ -68,9 +77,13 @@
     private void ValidateAccountId(string accountId)
     {
         if (string.IsNullOrEmpty(accountId))
+        {
             throw new ArgumentException("AccountId is empty or null");
+        }
 
         if (!int.TryParse(accountId, out _))
+        {
             throw new ArgumentException("AccountId is not a valid number");
+        }
     }
 }

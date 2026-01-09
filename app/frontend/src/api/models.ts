@@ -10,11 +10,6 @@ export const enum RetrievalMode {
     Text = "text"
 }
 
-export const enum SKMode {
-    Chains = "chains",
-    Planner = "planner"
-}
-
 export type ChatAppRequestOverrides = {
     retrieval_mode?: RetrievalMode;
     semantic_ranker?: boolean;
@@ -28,7 +23,6 @@ export type ChatAppRequestOverrides = {
     suggest_followup_questions?: boolean;
     use_oid_security_filter?: boolean;
     use_groups_security_filter?: boolean;
-    semantic_kernel_mode?: SKMode;
 };
 
 export type ResponseMessage = {

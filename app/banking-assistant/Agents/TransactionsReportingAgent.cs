@@ -1,77 +1,58 @@
-﻿/// <summary>
+﻿namespace BankingAssistant.Agents;
+
+/// <summary>
 /// Represents an agent responsible for handling transaction history and reporting-related operations.
 /// </summary>
-public class TransactionsReportingAgent : ITransactionsReportingAgent
+/// <remarks>
+/// Initializes a new instance of the <see cref="TransactionsReportingAgent"/> class.
+/// </remarks>
+/// <param name="agentFactory">The agent factory for creating ChatClientAgent instances.</param>
+/// <param name="configuration">The application configuration.</param>
+/// <param name="logger">The logger instance for logging operations.</param>
+public class TransactionsReportingAgent(AgentFactory agentFactory, IConfiguration configuration, ILogger<TransactionsReportingAgent> logger) : ITransactionsReportingAgent
 {
-    public ChatCompletionAgent? _agent;
-    private ILogger _logger;
-    private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
-    private readonly Kernel _kernel;
+    private ChatClientAgent? _agent;
+    private readonly ILogger<TransactionsReportingAgent> _logger = logger;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly AgentFactory _agentFactory = agentFactory;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TransactionsReportingAgent"/> class.
-    /// </summary>
-    /// <param name="kernel">The kernel instance for managing plugins and functions.</param>
-    /// <param name="configuration">The application configuration.</param>
-    /// <param name="userService">The user service for retrieving logged-in user information.</param>
-    /// <param name="logger">The logger instance for logging operations.</param>
-    public TransactionsReportingAgent(Kernel kernel, IConfiguration configuration, IUserService userService, ILogger<TransactionsReportingAgent> logger)
-    {
-        _userService = userService;
-        _configuration = configuration;
-        _kernel = kernel.Clone();
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Gets the <see cref="ChatCompletionAgent"/> instance, creating it if it does not already exist.
-    /// </summary>
-    public ChatCompletionAgent Agent
+	/// <summary>
+	/// Gets the <see cref="ChatClientAgent"/> instance, creating it if it does not already exist.
+	/// </summary>
+	public ChatClientAgent Agent
     {
         get
         {
-            if (_agent == null)
-            {
-                _agent = CreateAgentAsync().GetAwaiter().GetResult();
-            }
+            _agent ??= CreateAgentAsync().GetAwaiter().GetResult();
             return _agent;
         }
     }
 
     /// <summary>
-    /// Asynchronously creates a new <see cref="ChatCompletionAgent"/> instance.
+    /// Asynchronously creates a new <see cref="ChatClientAgent"/> instance.
     /// </summary>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the created <see cref="ChatCompletionAgent"/>.</returns>
-    private async Task<ChatCompletionAgent> CreateAgentAsync()
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created <see cref="ChatClientAgent"/>.</returns>
+    private async Task<ChatClientAgent> CreateAgentAsync()
     {
+        _logger.LogInformation("Creating TransactionsReportingAgent with MCP and OpenAPI tools");
 
-        var accountTools = await AgenticUtils.AddMcpServerPluginAsync(
+        // Get MCP tools from Account API
+        var accountTools = await ToolRegistrationHelper.GetMcpToolsAsync(
             clientName: "banking-assistant-client",
-            pluginName: "AccountPlugins",
             apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
-            useStreamableHttp: true
+            useStreamableHttp: true,
+            logger: _logger
         );
 
-        _kernel.Plugins.AddFromFunctions("AccountPlugins", accountTools.Select(mcpTools => mcpTools.AsKernelFunction()));
-
-        AgenticUtils.AddOpenAPIPlugin(
-           kernel: _kernel,
-           pluginName: "TransactionHistoryPlugin",
-           apiName: "transaction-history",
-           apiUrl: _configuration["BackendAPIs:TransactionsApiUrl"]
+        // Get OpenAPI tools from Transaction History API
+        var transactionTools = await ToolRegistrationHelper.GetOpenApiToolsAsync(
+            apiName: "transaction-history",
+            apiUrl: _configuration["BackendAPIs:TransactionsApiUrl"] ?? throw new InvalidOperationException("TransactionsApiUrl is not configured"),
+            logger: _logger
         );
 
-        return new()
-        {
-            Name = "TransactionsReportingAgent",
-            Instructions = String.Format(AgentInstructions.TransactionsReportingAgentInstructions, _userService.GetLoggedUser()),
-            Kernel = _kernel,
-            Arguments =
-            new KernelArguments(
-                new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() }
-            )
-        };
+        // Create agent using factory
+        return await _agentFactory.CreateTransactionsAgentAsync(accountTools, transactionTools);
     }
 }
 

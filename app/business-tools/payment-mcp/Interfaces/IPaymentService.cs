@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿namespace PaymentMcp.Interfaces;
+
+/// <summary>
 /// Interface for processing payment requests.
 /// </summary>
 public interface IPaymentService

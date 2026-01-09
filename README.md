@@ -15,13 +15,13 @@ products:
 - azure-cognitive-search
 - azure-container-apps
 - azure-sdks
-- semantic-kernel
+- agent-framework
 - github
 - document-intelligence
 - azure-monitor
 - azure-pipelines
 urlFragment: agent-openai-banking-assistant-csharp
-name: Multi Agents Banking Assistant with .NET and Semantic Kernel
+name: Multi Agents Banking Assistant with .NET and Microsoft Agent Framework
 description: A .NET sample app emulating a personal banking AI-powered assistant to inquire about account balances, review recent transactions, or initiate payments
 ---
 <!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->
@@ -30,7 +30,7 @@ description: A .NET sample app emulating a personal banking AI-powered assistant
 
 ![](./docs/assets/robot-agents-small.png)
 
-# Multi Agents Banking Assistant with .NET and Semantic Kernel
+# Multi Agents Banking Assistant with .NET and Microsoft Agent Framework
 
 [![Open project in GitHub Codespaces](https://img.shields.io/badge/Codespaces-Open-blue?style=flat-square&logo=github)](https://codespaces.new/azure-samples/agent-openai-banking-assistant-csharp?hide_repo_select=true&ref=main&quickstart=true)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/azure-samples/agent-openai-banking-assistant-csharp/azure-dev.yaml?style=flat-square&label=Build)](https://github.com/azure-samples/agent-openai-banking-assistant-csharp/actions)
@@ -46,7 +46,7 @@ description: A .NET sample app emulating a personal banking AI-powered assistant
 ![](./docs/assets/ui.gif)
 </div>
 
-This project is designed as a Proof of Concept (PoC) to explore the innovative realm of generative AI within the context of multi-agent architectures. By leveraging .NET and Microsoft Semantic Kernel AI orchestration framework, our aim is to build a chat web app to demonstrate the feasibility and reliability of using generative AI agents to transform user experience from web clicks to natural language conversations while maximizing reuse of the existing workload data and APIs.
+This project is designed as a Proof of Concept (PoC) to explore the innovative realm of generative AI within the context of multi-agent architectures. By leveraging .NET and Microsoft Agent Framework, our aim is to build a chat web app to demonstrate the feasibility and reliability of using generative AI agents to transform user experience from web clicks to natural language conversations while maximizing reuse of the existing workload data and APIs.
 
 
 
@@ -61,7 +61,7 @@ Invoices samples are included in the data folder to make it easy to explore paym
 This project provides the following features and technical patterns:
  - Simple multi ai agents .NET implementation using *gpt-4o-mini* on Azure Open AI.
  - Chat intent extraction and agent routing.
- - Agents tools configuration and automatic tools invocations with [.NET Semantic Kernel](https://github.com/microsoft/semantic-kernel/).
+ - Agents tools configuration and automatic tools invocations with [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview).
  - Tools output cache scoped at chat conversation level.It improves functions call planning and parameters extraction for long chat.
  - Chat based conversation implemented as [React Single Page Application](https://react.fluentui.dev/?path=/docs/concepts-introduction--docs) with support for images upload.Supported images are invoices, receipts, bills jpeg/png files you want your virtual banking assistant to pay on your behalf.
  - Images scanning and data extraction with Azure Document Intelligence using [prebuilt-invoice](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-invoice?view=doc-intel-4.0.0) model.
@@ -72,13 +72,13 @@ This project provides the following features and technical patterns:
 
 
 ### Architecture
-![HLA](docs/assets/HLA.png)
+![HLA](docs/assets/high-level-architecture.png)
 The personal banking assistant is designed as a [vertical multi-agent system](./docs/multi-agents/introduction.md), with each agent specializing in a specific functional domain (e.g., account management, transaction history, payments). The architecture consists of the following key components:
 
-- **Copilot Assistant Copilot App (Microservice)**: Serves as the central hub for processing user requests. It's a spring boot application implementing a vertical multi-agent architectures using .NET Semantic Kernel to create Agents equipped with tools. The Agent Router is used to understand user intent from chat interactions and routes the request to the appropriate domain-specific agent.
-    - **Agent Router**: Acts as a user proxy, interpreting user intent based on chat inputs and directing the request to the specific domain agent. This component ensures that user queries are efficiently handled by the relevant agent. It uses **IntentExtractor** tool backed by GPT4 model to extract the user intent in a json format. If intent is 'None' clarifying questions are provided. 
+- **Copilot Assistant Copilot App (Microservice)**: Serves as the central hub for processing user requests. It's a .NET application implementing a vertical multi-agent architecture using Microsoft Agent Framework to create specialized agents equipped with tools. The Triage Agent orchestrates the workflow and coordinates with domain-specific agents based on user intent.
+    - **Triage Agent**: Acts as a user proxy, interpreting user intent based on chat inputs and routing the request to the appropriate domain-specific agent using workflow orchestration. This component ensures that user queries are efficiently handled by the relevant agent through AI-powered handoff patterns.
 
-    - **Account Agent**: Specializes in handling tasks related to banking account information, credit balance, and registered payment methods. It leverages specific Account services to fetch and manage account-related data. Semantic Kernel MCP plugin is used to create a tool definition from the MCP Server contract and automatically call the MCP endpoint with input parameters extracted by gpt4 model from the chat conversation.
+    - **Account Agent**: Specializes in handling tasks related to banking account information, credit balance, and registered payment methods. It leverages specific Account services to fetch and manage account-related data. MCP (Model Context Protocol) integration is used to create tool definitions from the MCP Server contract and automatically call the MCP endpoint with input parameters extracted by the AI model from the chat conversation.
 
     - **Transactions Agent**: Focuses on tasks related to querying user bank movements, including income and outcome payments. This agent accesses account api to retrieve accountid and transaction history service to search for transactions and present them to the user.
 
@@ -355,7 +355,8 @@ Here are some resources to learn more about multi-agent architectures and techno
 
 - [Generative AI For Beginners](https://github.com/microsoft/generative-ai-for-beginners)
 - [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/overview)
-- [Semantic Kernel](https://devblogs.microsoft.com/semantic-kernel)
+- [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview)
+- [Microsoft Agent Framework .NET](https://github.com/microsoft/agent-framework/tree/main/dotnet)
 - [OpenAI's Bet on a Cognitive Architecture](https://blog.langchain.dev/openais-bet-on-a-cognitive-architecture/)
 - [THE LANDSCAPE OF EMERGING AI AGENT ARCHITECTURES FOR REASONING, PLANNING, AND TOOL CALLING: A SURVEY](https://arxiv.org/pdf/2404.11584)
 - [MicroAgents: Exploring Agentic Architecture with Microservices](https://devblogs.microsoft.com/semantic-kernel/microagents-exploring-agentic-architecture-with-microservices/)

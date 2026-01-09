@@ -1,4 +1,9 @@
-﻿public class AgentContext: Dictionary<string, object>
+﻿namespace BankingAssistant.Agents.Utils;
+
+/// <summary>
+/// A context class for agents to store and retrieve data during their operations.
+/// </summary>
+public class AgentContext : Dictionary<string, object>
 {
     public AgentContext() : base()
     {
@@ -16,4 +21,3 @@
     }
 
 }
-

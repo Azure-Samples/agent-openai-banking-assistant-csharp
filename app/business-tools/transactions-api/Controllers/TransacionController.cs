@@ -1,20 +1,23 @@
+namespace TransactionsApi.Controllers;
 
-
+/// <summary>
+/// Controller for managing transaction-related operations.
+/// </summary>
 [ApiController]
 [Route("[controller]")]
-public class TransactionsController : ControllerBase
+public class TransactionsController(
+    ITransactionService transactionService,
+    ILogger<TransactionsController> logger) : ControllerBase
 {
-    private readonly ITransactionService _transactionService;
-    private readonly ILogger<TransactionsController> _logger;
+    private readonly ITransactionService _transactionService = transactionService;
+    private readonly ILogger<TransactionsController> _logger = logger;
 
-    public TransactionsController(
-        ITransactionService transactionService,
-        ILogger<TransactionsController> logger)
-    {
-        _transactionService = transactionService;
-        _logger = logger;
-    }
-
+    /// <summary>
+    /// Retrieves transactions for a specific account, optionally filtered by recipient name.
+    /// </summary>
+    /// <param name="accountId">The account ID to retrieve transactions for.</param>
+    /// <param name="recipientName">Optional recipient name filter.</param>
+    /// <returns>A list of transactions matching the criteria.</returns>
     [HttpGet("{accountId}")]
     public ActionResult<List<Transaction>> GetTransactions(
         string accountId,
@@ -44,6 +47,12 @@ public class TransactionsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Notifies a new transaction for a specific account.
+    /// </summary>
+    /// <param name="accountId">The account ID for the transaction.</param>
+    /// <param name="transaction">The transaction details to notify.</param>
+    /// <returns>An action result indicating success or failure.</returns>
     [HttpPost("{accountId}")]
     public IActionResult NotifyTransaction(
         string accountId,

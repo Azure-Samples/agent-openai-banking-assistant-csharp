@@ -1,34 +1,22 @@
-﻿using System;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿namespace PaymentMcp.Services;
 
 /// <summary>
 /// Service for processing payment requests and notifying transactions.
 /// </summary>
-public class PaymentService : IPaymentService
+/// <remarks>
+/// Initializes a new instance of the <see cref="PaymentService"/> class.
+/// </remarks>
+/// <param name="logger">The logger to log information and errors.</param>
+/// <param name="httpClient">The HTTP client for making API requests.</param>
+/// <param name="transactionApiURL">The URL of the transaction API.</param>
+public class PaymentService(
+    ILogger<PaymentService> logger,
+    HttpClient httpClient,
+    string transactionApiURL) : IPaymentService
 {
-    private readonly ILogger<PaymentService> _logger;
-    private readonly HttpClient _httpClient;
-    private readonly string _transactionApiUrl;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PaymentService"/> class.
-    /// </summary>
-    /// <param name="logger">The logger to log information and errors.</param>
-    /// <param name="httpClient">The HTTP client for making API requests.</param>
-    /// <param name="transactionApiURL">The URL of the transaction API.</param>
-    public PaymentService(
-        ILogger<PaymentService> logger,
-        HttpClient httpClient,
-        string transactionApiURL)
-    {
-        _logger = logger;
-        _httpClient = httpClient;
-        _transactionApiUrl = transactionApiURL;
-    }
+    private readonly ILogger<PaymentService> _logger = logger;
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly string _transactionApiUrl = transactionApiURL;
 
     /// <summary>
     /// Processes a payment request asynchronously.

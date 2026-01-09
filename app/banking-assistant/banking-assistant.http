@@ -1,6 +1,120 @@
-@agent_openai_banking_assistant_csharp_HostAddress = http://localhost:5079
+@BankingAssistant_HostAddress = http://localhost:5079
 
-GET {{agent_openai_banking_assistant_csharp_HostAddress}}/weatherforecast/
+### Health Check
+GET {{BankingAssistant_HostAddress}}/api/chat
 Accept: application/json
+
+###
+
+### Test 1: Account Information (Should route to AccountAgent)
+POST {{BankingAssistant_HostAddress}}/api/chat
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is my account balance?"
+    }
+  ],
+  "stream": false,
+  "context": {
+    "overrides": {}
+  },
+  "attachments": [],
+  "approach": "rrr"
+}
+
+###
+
+### Test 2: Bill Payment (Should route to PaymentAgent)
+POST {{BankingAssistant_HostAddress}}/api/chat
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "I need to pay my electricity bill for $150"
+    }
+  ],
+  "stream": false,
+  "context": {
+    "overrides": {}
+  },
+  "attachments": [],
+  "approach": "rrr"
+}
+
+###
+
+### Test 3: Transaction History (Should route to TransactionsAgent)
+POST {{BankingAssistant_HostAddress}}/api/chat
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Show me my recent transactions"
+    }
+  ],
+  "stream": false,
+  "context": {
+    "overrides": {}
+  },
+  "attachments": [],
+  "approach": "rrr"
+}
+
+###
+
+### Test 4: Multi-turn Conversation
+POST {{BankingAssistant_HostAddress}}/api/chat
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "What accounts do I have?"
+    },
+    {
+      "role": "assistant",
+      "content": "You have the following accounts: Checking Account (Balance: $5,000), Savings Account (Balance: $10,000)"
+    },
+    {
+      "role": "user",
+      "content": "Show me transactions for my checking account"
+    }
+  ],
+  "stream": false,
+  "context": {
+    "overrides": {}
+  },
+  "attachments": [],
+  "approach": "rrr"
+}
+
+###
+
+### Test 5: Ambiguous Request (Should ask for clarification)
+POST {{BankingAssistant_HostAddress}}/api/chat
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Help me"
+    }
+  ],
+  "stream": false,
+  "context": {
+    "overrides": {}
+  },
+  "attachments": [],
+  "approach": "rrr"
+}
 
 ###

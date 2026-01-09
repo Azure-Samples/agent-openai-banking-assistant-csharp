@@ -1,23 +1,18 @@
+namespace PaymentMcp.Mcp.Tools;
 
 /// <summary>
 /// Represents a tool for processing payment requests.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="PaymentTool"/> class.
+/// </remarks>
+/// <param name="paymentService">The payment service to process payments.</param>
+/// <param name="logger">The logger to log information and errors.</param>
 [McpServerToolType]
-public class PaymentTool
+public class PaymentTool(IPaymentService paymentService, ILogger<PaymentTool> logger)
 {
-    private readonly IPaymentService _paymentService;
-    private readonly ILogger<PaymentTool> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PaymentTool"/> class.
-    /// </summary>
-    /// <param name="paymentService">The payment service to process payments.</param>
-    /// <param name="logger">The logger to log information and errors.</param>
-    public PaymentTool(IPaymentService paymentService, ILogger<PaymentTool> logger)
-    {
-        _paymentService = paymentService;
-        _logger = logger;
-    }
+    private readonly IPaymentService _paymentService = paymentService;
+    private readonly ILogger<PaymentTool> _logger = logger;
 
     /// <summary>
     /// Submits a payment request asynchronously.
@@ -26,7 +21,6 @@ public class PaymentTool
     [McpServerTool(Name = "SubmitPayment"), Description("Submit a payment request.")]
     public async Task<string> SubmitPaymentAsync([Description("Payment to submit.")]Payment payment)
     {
-
         _logger.LogInformation("Received payment request: {Payment}", payment);
 
         try
@@ -36,13 +30,11 @@ public class PaymentTool
         }
         catch (ArgumentException ex)
         {
-            Console.WriteLine(ex.Message);
             _logger.LogWarning(ex, "Invalid payment request");
             return "Invalid payment request.";
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
             _logger.LogError(ex, "Error processing payment");
             return "Error processing payment.";
         }

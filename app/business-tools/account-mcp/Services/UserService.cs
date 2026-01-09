@@ -1,4 +1,9 @@
-﻿public class UserService : IUserService
+﻿namespace AccountMcp.Services;
+
+/// <summary>
+/// Service for managing user-related data and operations.
+/// </summary>
+public class UserService : IUserService
 {
     private readonly Dictionary<string, Account> _accounts;
 
@@ -56,10 +61,12 @@
     public Task<List<Account>> GetAccountsByUserNameAsync(string userName)
     {
         if (string.IsNullOrEmpty(userName))
+        {
             return Task.FromResult(new List<Account>());
+        }
 
         return Task.FromResult(_accounts.TryGetValue(userName, out var account)
-            ? new List<Account> { account }
+            ? [account]
             : new List<Account>());
     }
 }

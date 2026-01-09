@@ -13,8 +13,7 @@ import {
     ChatAppResponseOrError,
     ChatAppRequest,
     ResponseMessage,
-    Approaches,
-    SKMode
+    Approaches
 } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -33,7 +32,6 @@ import { AttachmentType } from "../../components/AttachmentType";
 const Chat = () => {
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [approach, setApproach] = useState<Approaches>(Approaches.JAVA_OPENAI_SDK);
-    const [skMode, setSKMode] = useState<SKMode>(SKMode.Chains);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
     const [retrieveCount, setRetrieveCount] = useState<number>(3);
     const [retrievalMode, setRetrievalMode] = useState<RetrievalMode>(RetrievalMode.Hybrid);
@@ -133,8 +131,7 @@ const Chat = () => {
                         semantic_captions: useSemanticCaptions,
                         suggest_followup_questions: useSuggestFollowupQuestions,
                         use_oid_security_filter: useOidSecurityFilter,
-                        use_groups_security_filter: useGroupsSecurityFilter,
-                        semantic_kernel_mode: skMode
+                        use_groups_security_filter: useGroupsSecurityFilter
                     }
                 },
                 approach: approach,
@@ -188,10 +185,6 @@ const Chat = () => {
 
     const onRetrievalModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<RetrievalMode> | undefined, index?: number | undefined) => {
         setRetrievalMode(option?.data || RetrievalMode.Hybrid);
-    };
-
-    const onSKModeChange = (_ev: React.FormEvent<HTMLDivElement>, option?: IDropdownOption<SKMode> | undefined, index?: number | undefined) => {
-        setSKMode(option?.data || SKMode.Chains);
     };
 
     const onApproachChange = (_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, option?: IChoiceGroupOption) => {
@@ -390,18 +383,6 @@ const Chat = () => {
                             multiline
                             autoAdjustHeight
                             onChange={onPromptTemplateChange}
-                        />
-                    )}
-                    {(approach === Approaches.JAVA_SEMANTIC_KERNEL_PLANNER) && (
-                        <Dropdown
-                            className={styles.oneshotSettingsSeparator}
-                            label="Semantic Kernel mode"
-                            options={[
-                                { key: "chains", text: "Function Chaining", selected: skMode == SKMode.Chains, data: SKMode.Chains },
-                                { key: "planner", text: "Planner", selected: skMode == SKMode.Planner, data: SKMode.Planner, disabled: true }
-                            ]}
-                            required
-                            onChange={onSKModeChange}
                         />
                     )}
 

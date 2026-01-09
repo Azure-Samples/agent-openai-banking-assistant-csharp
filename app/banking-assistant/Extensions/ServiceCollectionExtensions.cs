@@ -1,5 +1,16 @@
-﻿public static class ServicesExtensions
+﻿namespace BankingAssistant.Extensions;
+
+/// <summary>
+/// Extension methods for IServiceCollection to add Azure services and agent infrastructure.
+/// </summary>
+public static class ServicesExtensions
 {
+    /// <summary>
+    /// Adds all Azure services and agent infrastructure to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddAzureServices(this IServiceCollection services, IConfiguration configuration)
     {
         var tenantId = configuration["AzureAd:TenantId"];
@@ -11,10 +22,11 @@
             credentialOptions.TenantId = tenantId;
         }
         
+        var credential = new DefaultAzureCredential(credentialOptions);
+        
         // Register Azure Blob Service Client via the Azure Clients builder.
         services.AddSingleton<BlobServiceClient>(provider =>
         {
-            var credential = new DefaultAzureCredential(credentialOptions);
             var accountName = configuration["Storage:AccountName"];
             var storageEndpoint = $"https://{accountName}.blob.core.windows.net";
             Console.WriteLine($"BlobServiceClient: {storageEndpoint}");
@@ -35,34 +47,27 @@
         // Register DocumentIntelligenceClient.
         services.AddSingleton<DocumentIntelligenceClient>(provider =>
         {
-            var endpoint = configuration["DocumentIntelligence:Endpoint"];
-            var credential = new DefaultAzureCredential(credentialOptions);
+            var endpoint = configuration["DocumentIntelligence:Endpoint"]
+                ?? throw new InvalidOperationException("DocumentIntelligence:Endpoint is not configured");
             return new DocumentIntelligenceClient(new Uri(endpoint), credential);
         });
 
         // Register DocumentIntelligenceProxy as IDocumentScanner.
         services.AddSingleton<IDocumentScanner, DocumentIntelligenceProxy>();
 
-        // Register Azure OpenAI Kernel.
-        services.AddKernel().AddAzureOpenAIChatCompletion(
-            deploymentName: configuration["AzureOpenAI:Deployment"],
-            endpoint: configuration["AzureOpenAI:Endpoint"],
-            credentials: new DefaultAzureCredential(credentialOptions)
-        );
+        // Register IChatClient for Azure OpenAI
+        services.AddSingleton<IChatClient>(provider =>
+        {
+            return ChatClientInitialization.CreateFromConfiguration(configuration);
+        });
 
         services.AddSingleton<IUserService, LoggedUserService>();
 
-        // Register Agent Router
-        services.AddTransient<IAgentRouter, AgentRouter>();
+        // Register Microsoft Agent Framework infrastructure
+        services.AddSingleton<AgentFactory>();
         
-        // Register Intent Extractor Agent
-        services.AddSingleton<IIntentExtractorAgent, IntentExtractorAgent>();
-        // Register Account Agent
-        services.AddSingleton<IAccountAgent, AccountAgent>();
-        // Register Payment Agent
-        services.AddSingleton<IPaymentAgent, PaymentAgent>();
-        // Register Transactions Reporting Agent
-        services.AddSingleton<ITransactionsReportingAgent, TransactionsReportingAgent>();
+        // Register Agent Orchestration Service
+        services.AddSingleton<AgentOrchestrationService>();
 
         return services;
     }

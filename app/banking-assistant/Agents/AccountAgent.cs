@@ -1,71 +1,51 @@
-﻿/// <summary>
+﻿namespace BankingAssistant.Agents;
+
+/// <summary>
 /// Represents an agent responsible for managing account-related operations.
 /// </summary>
-public class AccountAgent : IAccountAgent
+/// <remarks>
+/// Initializes a new instance of the <see cref="AccountAgent"/> class.
+/// </remarks>
+/// <param name="agentFactory">The agent factory for creating ChatClientAgent instances.</param>
+/// <param name="configuration">The application configuration.</param>
+/// <param name="logger">The logger instance for logging operations.</param>
+public class AccountAgent(AgentFactory agentFactory, IConfiguration configuration, ILogger<AccountAgent> logger) : IAccountAgent
 {
-    private ChatCompletionAgent? _agent; // Marked as nullable
-    private ILogger<AccountAgent> _logger;
-    private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
-    private readonly Kernel _kernel;
-    private readonly string _pluginName = "AccountPlugins";
+    private ChatClientAgent? _agent;
+    private readonly ILogger<AccountAgent> _logger = logger;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly AgentFactory _agentFactory = agentFactory;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AccountAgent"/> class.
-    /// </summary>
-    /// <param name="kernel">The kernel instance for managing plugins and functions.</param>
-    /// <param name="configuration">The application configuration.</param>
-    /// <param name="userService">The user service for retrieving logged-in user information.</param>
-    /// <param name="logger">The logger instance for logging operations.</param>
-    public AccountAgent(Kernel kernel, IConfiguration configuration, IUserService userService, ILogger<AccountAgent> logger)
-    {
-        _logger = logger;
-        _userService = userService;
-        _configuration = configuration;
-        _kernel = kernel.Clone();
-    }
-
-    /// <summary>
-    /// Gets the <see cref="ChatCompletionAgent"/> instance, creating it if it does not already exist.
-    /// </summary>
-    public ChatCompletionAgent Agent
+	/// <summary>
+	/// Gets the <see cref="ChatClientAgent"/> instance, creating it if it does not already exist.
+	/// </summary>
+	public ChatClientAgent Agent
     {
         get
         {
-            if (_agent == null)
-            {
-                _agent = CreateAgentAsync().GetAwaiter().GetResult();
-            }
+            _agent ??= CreateAgentAsync().GetAwaiter().GetResult();
             return _agent;
         }
     }
 
     /// <summary>
-    /// Asynchronously creates a new <see cref="ChatCompletionAgent"/> instance.
+    /// Asynchronously creates a new <see cref="ChatClientAgent"/> instance.
     /// </summary>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the created <see cref="ChatCompletionAgent"/>.</returns>
-    private async Task<ChatCompletionAgent> CreateAgentAsync()
+    /// <returns>A task that represents the asynchronous operation. The task result contains the created <see cref="ChatClientAgent"/>.</returns>
+    private async Task<ChatClientAgent> CreateAgentAsync()
     {
-        // Add mcp plugins
-        var tools = await AgenticUtils.AddMcpServerPluginAsync(
+        _logger.LogInformation("Creating AccountAgent with MCP tools");
+
+        // Get MCP tools from Account API
+        var accountTools = await ToolRegistrationHelper.GetMcpToolsAsync(
             clientName: "banking-assistant-client",
-            pluginName: _pluginName,
             apiUrl: _configuration["BackendAPIs:AccountsApiUrl"] + "/mcp",
-            useStreamableHttp: true
+            useStreamableHttp: true,
+            logger: _logger
         );
 
-        _kernel.Plugins.AddFromFunctions(_pluginName, tools.Select(mcpTools => mcpTools.AsKernelFunction()));
-
-        return new ChatCompletionAgent
-        {
-            Name = nameof(AccountAgent),
-            Instructions = String.Format(AgentInstructions.AccountAgentInstructions, _userService.GetLoggedUser()),
-            Kernel = _kernel,
-            Arguments =
-            new KernelArguments(
-                new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() }
-            )
-        };
+        // Create agent using factory
+        return await _agentFactory.CreateAccountAgentAsync(accountTools);
     }
 }
 

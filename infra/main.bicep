@@ -411,9 +411,5 @@ output AZURE_STORAGE_ACCOUNT string = storage.outputs.name
 output AZURE_STORAGE_CONTAINER string = storageContainerName
 output AZURE_STORAGE_RESOURCE_GROUP string = storageResourceGroup.name
 
-output APPLICATION_INSIGHTS_ACTIVE string = useApplicationInsights ? 'true' : 'false'
-output APPLICATION_INSIGHTS_STRING string = useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
-output APPLICATION_INSIGHTS_INSTRUMENTATION_KEY string = useApplicationInsights ? monitoring.outputs.applicationInsightsInstrumentationKey : ''
-
 // output BACKEND_URI string = backend.outputs.uri
 // output INDEXER_FUNCTIONAPP_NAME string = indexer.outputs.name

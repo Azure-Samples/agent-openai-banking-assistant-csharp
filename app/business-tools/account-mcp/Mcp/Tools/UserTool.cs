@@ -1,19 +1,18 @@
-[McpServerToolType]
-public class UserTool
-{
-    private readonly IUserService _userService;
-    private readonly ILogger<UserTool> _logger;
+namespace AccountMcp.Mcp.Tools;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UserTool"/> class.
-    /// </summary>
-    /// <param name="userService">The user service to retrieve user-related data.</param>
-    /// <param name="logger">The logger instance for logging operations.</param>
-    public UserTool(IUserService userService, ILogger<UserTool> logger)
-    {
-        _userService = userService;
-        _logger = logger;
-    }
+/// <summary>
+/// MCP tool for managing user-related operations.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="UserTool"/> class.
+/// </remarks>
+/// <param name="userService">The user service to retrieve user-related data.</param>
+/// <param name="logger">The logger instance for logging operations.</param>
+[McpServerToolType]
+public class UserTool(IUserService userService, ILogger<UserTool> logger)
+{
+    private readonly IUserService _userService = userService;
+    private readonly ILogger<UserTool> _logger = logger;
 
     /// <summary>
     /// Retrieves the list of all accounts associated with a specific user.

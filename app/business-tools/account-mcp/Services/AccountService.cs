@@ -1,12 +1,17 @@
-﻿public class AccountService : IAccountService
+﻿namespace AccountMcp.Services;
+
+/// <summary>
+/// Service for managing account-related data and operations.
+/// </summary>
+public class AccountService : IAccountService
 {
     private readonly Dictionary<string, Account> _accounts;
     private readonly Dictionary<string, PaymentMethod> _paymentMethods;
 
     public AccountService()
     {
-        _accounts = new Dictionary<string, Account>();
-        _paymentMethods = new Dictionary<string, PaymentMethod>();
+        _accounts = [];
+        _paymentMethods = [];
 
         // Fill the dictionary with dummy data
         _accounts["1000"] = new Account(
@@ -61,13 +66,13 @@
     /// </summary>
     /// <param name="accountId">The ID of the account to retrieve.</param>
     /// <returns>A task representing the asynchronous operation, containing the account details if found, or null otherwise.</returns>
-    public async Task<Account> GetAccountDetailsAsync(string accountId)
+    public async Task<Account?> GetAccountDetailsAsync(string accountId)
     {
         ValidateAccountId(accountId);
         return await Task.FromResult(_accounts.TryGetValue(accountId, out var account) ? account : null);
     }
 
-    public async Task<PaymentMethod> GetPaymentMethodDetailsAsync(string paymentMethodId)
+    public async Task<PaymentMethod?> GetPaymentMethodDetailsAsync(string paymentMethodId)
     {
         ValidateAccountId(paymentMethodId);
         return await Task.FromResult(_paymentMethods.TryGetValue(paymentMethodId, out var paymentMethod) ? paymentMethod : null);
@@ -87,14 +92,17 @@
     }
 
     // Optionally keep the old synchronous methods if needed, or remove them if not required.
-
-    private void ValidateAccountId(string accountId)
+    private static void ValidateAccountId(string accountId)
     {
         if (string.IsNullOrEmpty(accountId))
+        {
             throw new ArgumentException("AccountId is empty or null");
+        }
 
         if (!int.TryParse(accountId, out _))
+        {
             throw new ArgumentException("AccountId is not a valid number");
+        }
     }
 }
 
