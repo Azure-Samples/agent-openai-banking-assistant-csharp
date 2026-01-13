@@ -1,0 +1,151 @@
+@AccountMcp_HostAddress = http://localhost:5001
+
+### Test 1: MCP Server Initialize
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "test-client",
+      "version": "1.0.0"
+    }
+  }
+}
+
+###
+
+### Test 2: List Available Tools
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list",
+  "params": {}
+}
+
+###
+
+### Test 3: Get Account Details (Alice - Account 1000)
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "GetAccountDetails",
+    "arguments": {
+      "accountId": "1000"
+    }
+  }
+}
+
+###
+
+### Test 4: Get Account Details (Bob - Account 1010)
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "GetAccountDetails",
+    "arguments": {
+      "accountId": "1010"
+    }
+  }
+}
+
+###
+
+### Test 5: Get Payment Method Details (Visa)
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "GetPaymentMethodDetails",
+    "arguments": {
+      "accountId": "1000",
+      "methodId": "12345"
+    }
+  }
+}
+
+###
+
+### Test 6: Get Beneficiary Details
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "GetBeneficiaryDetails",
+    "arguments": {
+      "accountId": "1000"
+    }
+  }
+}
+
+###
+
+### Test 7: Get Account by Username (Alice)
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "GetAccountByUserName",
+    "arguments": {
+      "userName": "alice.user@contoso.com"
+    }
+  }
+}
+
+###
+
+### Test 8: Invalid Account ID (Error Case)
+POST {{AccountMcp_HostAddress}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "tools/call",
+  "params": {
+    "name": "GetAccountDetails",
+    "arguments": {
+      "accountId": "9999"
+    }
+  }
+}
+
+###

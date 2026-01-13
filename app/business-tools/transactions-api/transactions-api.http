@@ -1,0 +1,73 @@
+@TransactionsApi_HostAddress = http://localhost:5000
+
+### Test 1: Get Transactions for Account 1000
+GET {{TransactionsApi_HostAddress}}/Transactions/1000
+Accept: application/json
+
+###
+
+### Test 2: Get Transactions for Account 1010
+GET {{TransactionsApi_HostAddress}}/Transactions/1010
+Accept: application/json
+
+###
+
+### Test 3: Get Transactions for Account 1020
+GET {{TransactionsApi_HostAddress}}/Transactions/1020
+Accept: application/json
+
+###
+
+### Test 4: Post New Transaction Notification
+POST {{TransactionsApi_HostAddress}}/Transactions/1010
+Content-Type: application/json
+
+{
+  "id": "TRX001",
+  "accountId": "1010",
+  "description": "Test payment to vendor",
+  "type": "outcome",
+  "amount": "250.00",
+  "recipientName": "Test Vendor",
+  "recipientBankCode": "TEST123",
+  "paymentType": "banktransfer",
+  "timestamp": "2026-01-12T10:45:00Z"
+}
+
+###
+
+### Test 5: Post Credit Card Transaction
+POST {{TransactionsApi_HostAddress}}/Transactions/1010
+Content-Type: application/json
+
+{
+  "id": "TRX002",
+  "accountId": "1010",
+  "description": "Online purchase",
+  "type": "outcome",
+  "amount": "89.99",
+  "recipientName": "Online Store",
+  "recipientBankCode": "STORE456",
+  "paymentType": "creditcard",
+  "timestamp": "2026-01-12T10:50:00Z"
+}
+
+###
+
+### Test 6: Invalid Account ID (Error Case)
+GET {{TransactionsApi_HostAddress}}/Transactions/9999
+Accept: application/json
+
+###
+
+### Test 7: OpenAPI/Scalar Documentation
+GET {{TransactionsApi_HostAddress}}/scalar/v1
+Accept: text/html
+
+###
+
+### Test 8: OpenAPI Specification
+GET {{TransactionsApi_HostAddress}}/openapi/v1.json
+Accept: application/json
+
+###

@@ -31,6 +31,7 @@ var loggerConfig = new LoggerConfiguration()
 if (appInsightsActive)
 {
     var appInsightsConnectionString = builder.Configuration.GetValue<string>("ApplicationInsights:ConnectionString");
+    
     if (!string.IsNullOrEmpty(appInsightsConnectionString))
     {
         loggerConfig.WriteTo.ApplicationInsights(appInsightsConnectionString, TelemetryConverter.Traces);

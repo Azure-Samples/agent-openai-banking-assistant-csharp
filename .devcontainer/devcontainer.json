@@ -7,7 +7,7 @@
             "version": "1.9.1"
         },
         "ghcr.io/devcontainers/features/dotnet:2": {
-        "version": "8.0"
+        "version": "9.0"
         },
         "ghcr.io/devcontainers/features/node:1": {
             "version": "20.5.0"
@@ -16,7 +16,7 @@
         "ghcr.io/devcontainers/features/git:1": {
             "version": "2.39.1"
         },
-        "ghcr.io/devcontainers-contrib/features/typescript:2": {},
+        "ghcr.io/devcontainers-extra/features/typescript:2": {},
         "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {},
         "docker-in-docker": {
             "version": "latest",
@@ -32,8 +32,10 @@
                 "ms-azuretools.vscode-bicep",
                 "ms-dotnettools.csdevkit",
                 "ms-dotnettools.csharp",
-                "ms-dotnettools.vscode-dotnet-runtime",                
-                "amodio.tsl-problem-matcher"
+                "ms-dotnettools.vscode-dotnet-runtime",
+                "amodio.tsl-problem-matcher",
+                "humao.rest-client",
+                "ms-windows-ai-studio.windows-ai-studio"
             ]
         }
     }
