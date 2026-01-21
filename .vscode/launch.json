@@ -8,7 +8,10 @@
             "program": "${workspaceFolder}/app/banking-assistant/bin/Debug/net9.0/banking-assistant.dll",
             "args": [],
             "cwd": "${workspaceFolder}/app/banking-assistant",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": "Account MCP",
@@ -17,7 +20,10 @@
             "program": "${workspaceFolder}/app/business-tools/account-mcp/bin/Debug/net9.0/account-mcp.dll",
             "args": [],
             "cwd": "${workspaceFolder}/app/business-tools/account-mcp",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": "Payment MCP",
@@ -26,7 +32,10 @@
             "program": "${workspaceFolder}/app/business-tools/payment-mcp/bin/Debug/net9.0/payment-mcp.dll",
             "args": [],
             "cwd": "${workspaceFolder}/app/business-tools/payment-mcp",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": "Transactions API",
@@ -35,7 +44,10 @@
             "program": "${workspaceFolder}/app/business-tools/transactions-api/bin/Debug/net9.0/transactions-api.dll",
             "args": [],
             "cwd": "${workspaceFolder}/app/business-tools/transactions-api",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": "Frontend",

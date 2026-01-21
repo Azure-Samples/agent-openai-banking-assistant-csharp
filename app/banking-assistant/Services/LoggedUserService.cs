@@ -19,5 +19,5 @@ public class LoggedUserService : IUserService
     /// Gets a default user for development/testing purposes.
     /// </summary>
     /// <returns>A default logged user.</returns>
-    private static LoggedUser GetDefaultUser() => new("bob.user@contoso.com", "bob.user@contoso.com", "generic", "Bob The User");
+    private static LoggedUser GetDefaultUser() => new("bob.user@contoso.com", "bob.user@contoso.com", "generic", "Bob The User", "1010");
 }

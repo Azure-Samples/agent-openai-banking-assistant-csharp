@@ -41,7 +41,7 @@ public class DocumentIntelligenceProxy : IDocumentScanner
     /// </summary>
     /// <param name="fileName">The name of the file to scan in blob storage.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a dictionary of extracted fields and their values.</returns>
-    public async Task<Dictionary<string, string>> Scan(string fileName)
+    public async Task<Dictionary<string, string>> ScanAsync(string fileName)
     {
         var image = await _blobStorageProxy.GetFileAsBytesAsync(fileName);
         _logger.LogInformation($"Scanning: {fileName} {image.Length}");

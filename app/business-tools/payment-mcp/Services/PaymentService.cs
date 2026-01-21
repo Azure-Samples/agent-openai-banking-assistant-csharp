@@ -1,4 +1,6 @@
-﻿namespace PaymentMcp.Services;
+﻿using PaymentMcp.Models;
+
+namespace PaymentMcp.Services;
 
 /// <summary>
 /// Service for processing payment requests and notifying transactions.
@@ -22,24 +24,12 @@ public class PaymentService(
     /// Processes a payment request asynchronously.
     /// </summary>
     /// <param name="payment">The payment details to process.</param>
-    /// <exception cref="ArgumentException">Thrown when payment details are invalid.</exception>
+    /// <exception cref="ValidationException">Thrown when payment validation fails.</exception>
     /// <exception cref="HttpRequestException">Thrown when there is an error notifying the transaction API.</exception>
     public async Task ProcessPaymentAsync(Payment payment)
     {
-        // Validate AccountId
-        if (string.IsNullOrEmpty(payment.AccountId))
-            throw new ArgumentException("AccountId is empty or null");
-
-        if (!int.TryParse(payment.AccountId, out _))
-            throw new ArgumentException("AccountId is not a valid number");
-
-        // Validate PaymentMethodId
-        if (payment.PaymentType?.ToLower() != "transfer" &&
-            string.IsNullOrEmpty(payment.PaymentMethodId))
-            throw new ArgumentException("paymentMethodId is empty or null");
-
-        if (!int.TryParse(payment.PaymentMethodId, out _))
-            throw new ArgumentException("paymentMethodId is not a valid number");
+        // Validate payment
+        ValidatePayment(payment);
 
         // Log payment details
         _logger.LogInformation($"Payment successful for: {payment}");
@@ -70,6 +60,23 @@ public class PaymentService(
                 payment.AccountId
             );
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Validates a payment object.
+    /// </summary>
+    /// <param name="payment">The payment to validate.</param>
+    /// <exception cref="ArgumentException">Thrown when payment validation fails.</exception>
+    private void ValidatePayment(Payment payment)
+    {
+        if (string.IsNullOrEmpty(payment.AccountId) || !System.Text.RegularExpressions.Regex.IsMatch(payment.AccountId, @"^\d+$"))
+            throw new ArgumentException("AccountId is empty or null or not a valid number");
+
+        if (payment.PaymentType?.ToLower() != "transfer")
+        {
+            if (string.IsNullOrEmpty(payment.PaymentMethodId) || !System.Text.RegularExpressions.Regex.IsMatch(payment.PaymentMethodId, @"^\d+$"))
+                throw new ArgumentException("paymentMethodId is empty or null or not a valid number");
         }
     }
 

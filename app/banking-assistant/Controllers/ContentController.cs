@@ -1,5 +1,7 @@
 ﻿namespace BankingAssistant.Controllers;
 
+using BankingAssistant.Exceptions;
+
 /// <summary>
 /// Controller for handling content-related requests, such as fetching images from blob storage.
 /// </summary>
@@ -33,7 +35,7 @@ public class ContentController : ControllerBase
     /// <response code="400">If no file name is provided.</response>
     /// <response code="500">If an error occurs while fetching the file.</response>
     [HttpGet("{fileName}")]
-    public async Task<IActionResult> Index(string fileName)
+    public async Task<IActionResult> IndexAsync(string fileName)
     {
         if (fileName == null || fileName.Length == 0)
         {
@@ -65,25 +67,17 @@ public class ContentController : ControllerBase
     /// <response code="400">If the file is missing or empty.</response>
     /// <response code="500">If an error occurs while uploading the file.</response>
     [HttpPost]
-    public async Task<IActionResult> UploadContent([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadContentAsync([FromForm] IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
             _logger.LogWarning("File is missing.");
-            return BadRequest("File is missing.");
+            throw new BadRequestException("File is missing or empty.");
         }
-        var fileName = Path.GetFileName(file.FileName);
 
-        try
-        {
-            using var blobStream = file.OpenReadStream();
-            await _blobStorage.StoreFileAsync(fileName, blobStream);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error uploading file to blob storage.");
-            return StatusCode(500, "Error uploading file to blob storage.");
-        }
+        var fileName = Path.GetFileName(file.FileName);
+        using var blobStream = file.OpenReadStream();
+        await _blobStorage.StoreFileAsync(fileName, blobStream);
 
         return Ok(fileName);
     }

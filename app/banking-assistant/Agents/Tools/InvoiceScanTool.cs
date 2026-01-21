@@ -21,7 +21,7 @@ public class InvoiceScanTool(IDocumentScanner documentScanner, ILogger<InvoiceSc
 	/// <param name="filePath">The path to the file containing the invoice image or photo.</param>
 	/// <returns>A JSON string containing the extracted invoice data.</returns>
 	[Description("Extract the invoice or bill data scanning a photo or image")]
-    public async Task<string> ScanInvoice([Description("the path to the file containing the image or photo")] string filePath)
+    public async Task<string> ScanInvoiceAsync([Description("the path to the file containing the image or photo")] string filePath)
     {
         ArgumentException.ThrowIfNullOrEmpty(filePath, nameof(filePath));
 
@@ -30,7 +30,7 @@ public class InvoiceScanTool(IDocumentScanner documentScanner, ILogger<InvoiceSc
 
         try
         {
-            scanData = await _documentScanner.Scan(filePath);
+            scanData = await _documentScanner.ScanAsync(filePath);
         }
         catch (Exception ex)
         {

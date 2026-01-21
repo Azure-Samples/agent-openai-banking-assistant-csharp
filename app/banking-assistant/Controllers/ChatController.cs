@@ -1,4 +1,8 @@
-﻿namespace BankingAssistant.Controllers;
+﻿using BankingAssistant.Exceptions;
+using BankingAssistant.Validators;
+using FluentValidation;
+
+namespace BankingAssistant.Controllers;
 
 /// <summary>
 /// Controller for handling chat-related requests.
@@ -9,18 +13,22 @@ public class ChatController : ControllerBase
 {
     private readonly ILogger<ChatController> _logger;
     private readonly AgentOrchestrationService _orchestrationService;
+    private readonly IValidator<ChatAppRequest> _chatRequestValidator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChatController"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="orchestrationService">The agent orchestration service.</param>
+    /// <param name="chatRequestValidator">The chat request validator.</param>
     public ChatController(
         ILogger<ChatController> logger, 
-        AgentOrchestrationService orchestrationService)
+        AgentOrchestrationService orchestrationService,
+        IValidator<ChatAppRequest> chatRequestValidator)
     {
         _logger = logger;
         _orchestrationService = orchestrationService;
+        _chatRequestValidator = chatRequestValidator;
     }
 
     /// <summary>
@@ -28,7 +36,7 @@ public class ChatController : ControllerBase
     /// </summary>
     /// <returns>A status message indicating the controller is available.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> IndexAsync()
     {
         return await Task.FromResult(Ok("Chat Controller is available."));
     }
@@ -42,27 +50,13 @@ public class ChatController : ControllerBase
     /// <response code="400">If the request is invalid or missing required data.</response>
     [HttpPost]
     [Produces("application/json")]
-    public async Task<IActionResult> ChatWithOpenAI([FromBody] ChatAppRequest chatRequest)
+    public async Task<IActionResult> ChatWithOpenAIAsync([FromBody] ChatAppRequest chatRequest)
     {
-        if (!ModelState.IsValid)
+        // Validate the request using FluentValidation
+        var validationResult = await _chatRequestValidator.ValidateAsync(chatRequest);
+        if (!validationResult.IsValid)
         {
-            return BadRequest(ModelState);
-        }
-
-        if (chatRequest.Stream)
-        {
-            _logger.LogWarning(
-                "Requested a content-type of application/json however also requested streaming. " +
-                "Please use a content-type of application/ndjson");
-            return BadRequest(
-                "Requested a content-type of application/json however also requested streaming. " +
-                "Please use a content-type of application/ndjson");
-        }
-
-        if (chatRequest.Messages == null || !chatRequest.Messages.Any())
-        {
-            _logger.LogWarning("history cannot be null in Chat request");
-            return BadRequest();
+            throw new BankingAssistant.Exceptions.ValidationException(validationResult.Errors);
         }
 
         // Convert request messages to Microsoft.Extensions.AI ChatMessage list
@@ -83,6 +77,102 @@ public class ChatController : ControllerBase
 
         // Build response
         Models.ChatResponse response = Models.ChatResponse.BuildChatResponse(result.Messages, result.Context);
+        return new JsonResult(response);
+    }
+
+    /// <summary>
+    /// Processes requests through the Account Agent independently without triage routing.
+    /// </summary>
+    /// <param name="chatRequest">The chat request containing the message to process.</param>
+    /// <returns>A JSON response containing the Account Agent's reply.</returns>
+    /// <response code="200">Returns the agent response.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="500">If an error occurs during agent execution.</response>
+    [HttpPost("account")]
+    [Produces("application/json")]
+    public async Task<IActionResult> AccountAgentAsync([FromBody] ChatAppRequest chatRequest)
+    {
+        var validationResult = await _chatRequestValidator.ValidateAsync(chatRequest);
+        if (!validationResult.IsValid)
+        {
+            throw new BankingAssistant.Exceptions.ValidationException(validationResult.Errors);
+        }
+
+        var chatMessages = ConvertToChatMessages(chatRequest);
+        var result = await _orchestrationService.AccountAgentAsync(chatMessages);
+        var response = Models.ChatResponse.BuildChatResponse(result.Messages, result.Context);
+        return new JsonResult(response);
+    }
+
+    /// <summary>
+    /// Processes requests through the Payment Agent independently without triage routing.
+    /// </summary>
+    /// <param name="chatRequest">The chat request containing the message to process.</param>
+    /// <returns>A JSON response containing the Payment Agent's reply.</returns>
+    /// <response code="200">Returns the agent response.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="500">If an error occurs during agent execution.</response>
+    [HttpPost("payment")]
+    [Produces("application/json")]
+    public async Task<IActionResult> PaymentAgentAsync([FromBody] ChatAppRequest chatRequest)
+    {
+        var validationResult = await _chatRequestValidator.ValidateAsync(chatRequest);
+        if (!validationResult.IsValid)
+        {
+            throw new BankingAssistant.Exceptions.ValidationException(validationResult.Errors);
+        }
+
+        var chatMessages = ConvertToChatMessages(chatRequest);
+        var result = await _orchestrationService.PaymentAgentAsync(chatMessages);
+        var response = Models.ChatResponse.BuildChatResponse(result.Messages, result.Context);
+        return new JsonResult(response);
+    }
+
+    /// <summary>
+    /// Processes requests through the Transactions Agent independently without triage routing.
+    /// </summary>
+    /// <param name="chatRequest">The chat request containing the message to process.</param>
+    /// <returns>A JSON response containing the Transactions Agent's reply.</returns>
+    /// <response code="200">Returns the agent response.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="500">If an error occurs during agent execution.</response>
+    [HttpPost("transactions")]
+    [Produces("application/json")]
+    public async Task<IActionResult> TransactionsAgentAsync([FromBody] ChatAppRequest chatRequest)
+    {
+        var validationResult = await _chatRequestValidator.ValidateAsync(chatRequest);
+        if (!validationResult.IsValid)
+        {
+            throw new BankingAssistant.Exceptions.ValidationException(validationResult.Errors);
+        }
+
+        var chatMessages = ConvertToChatMessages(chatRequest);
+        var result = await _orchestrationService.TransactionsAgentAsync(chatMessages);
+        var response = Models.ChatResponse.BuildChatResponse(result.Messages, result.Context);
+        return new JsonResult(response);
+    }
+
+    /// <summary>
+    /// Processes requests through the Triage Agent for routing determination.
+    /// </summary>
+    /// <param name="chatRequest">The chat request containing the message to process.</param>
+    /// <returns>A JSON response containing the Triage Agent's reply.</returns>
+    /// <response code="200">Returns the agent response.</response>
+    /// <response code="400">If the request is invalid.</response>
+    /// <response code="500">If an error occurs during agent execution.</response>
+    [HttpPost("triage")]
+    [Produces("application/json")]
+    public async Task<IActionResult> TriageAgentAsync([FromBody] ChatAppRequest chatRequest)
+    {
+        var validationResult = await _chatRequestValidator.ValidateAsync(chatRequest);
+        if (!validationResult.IsValid)
+        {
+            throw new BankingAssistant.Exceptions.ValidationException(validationResult.Errors);
+        }
+
+        var chatMessages = ConvertToChatMessages(chatRequest);
+        var result = await _orchestrationService.TriageAgentAsync(chatMessages);
+        var response = Models.ChatResponse.BuildChatResponse(result.Messages, result.Context);
         return new JsonResult(response);
     }
 

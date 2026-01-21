@@ -7,4 +7,5 @@
 /// <param name="mail">The user's email address.</param>
 /// <param name="role">The user's role or permission level.</param>
 /// <param name="displayName">The user's display name.</param>
-public record LoggedUser(string username, string mail, string role, string displayName);
+/// <param name="accountId">The user's account ID for banking operations.</param>
+public record LoggedUser(string username, string mail, string role, string displayName, string accountId);

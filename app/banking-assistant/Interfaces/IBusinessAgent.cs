@@ -2,19 +2,34 @@
 namespace BankingAssistant.Interfaces;
 
 /// <summary>
-/// Marker interface for the Account Agent.
+/// Interface for managing Account Agents.
 /// </summary>
-public interface IAccountAgent
-{ }
+public interface IAccountAgentManager
+{
+    /// <summary>
+    /// Asynchronously creates an AIAgent instance for account operations.    
+    /// </summary>
+    Task<AIAgent> CreateAgentAsync();
+}
 
 /// <summary>
-/// Marker interface for the Payment Agent.
+/// Interface for managing Payment Agents.
 /// </summary>
-public interface IPaymentAgent
-{ }
+public interface IPaymentAgentManager
+{
+    /// <summary>
+    /// Asynchronously creates an AIAgent instance for payment operations.    
+    /// </summary>
+    Task<AIAgent> CreateAgentAsync();
+}
 
 /// <summary>
-/// Marker interface for the Transactions Reporting Agent.
+/// Interface for managing Transactions Reporting Agents.
 /// </summary>
-public interface ITransactionsReportingAgent
-{ }
+public interface ITransactionsReportingAgentManager
+{
+    /// <summary>
+    /// Asynchronously creates an AIAgent instance for transactions operations.
+    /// </summary>
+    Task<AIAgent> CreateAgentAsync();
+}

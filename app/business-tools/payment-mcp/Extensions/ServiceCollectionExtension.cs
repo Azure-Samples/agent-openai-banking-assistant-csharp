@@ -12,14 +12,20 @@ public static class ServicesExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
+        services.AddHttpClient();
+        
         services.AddSingleton<IPaymentService>(provider =>
         {
             var configuration = provider.GetRequiredService<IConfiguration>();
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-            var httpClient = new HttpClient();
+            var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
+
+            var httpClient = httpClientFactory.CreateClient();
             var transactionsApiUrl = configuration["BackendAPIs:TransactionsApiUrl"] ?? throw new InvalidOperationException("BackendAPIs:TransactionsApiUrl configuration is missing");
+
             return new PaymentService(loggerFactory.CreateLogger<PaymentService>(), httpClient, transactionsApiUrl);
         });
+
         return services;
     }
 }

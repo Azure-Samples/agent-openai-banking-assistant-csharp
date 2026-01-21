@@ -21,29 +21,26 @@ public class AgentFactory(
 	/// <summary>
 	/// Creates a ChatClientAgent with the specified configuration.
 	/// </summary>
-	/// <param name="name\">The name of the agent.</param>
+	/// <param name="name">The name of the agent.</param>
 	/// <param name="instructions">The system instructions for the agent.</param>
-	/// <param name="tools">Optional list of tools (AIFunctions) available to the agent.</param>
+	/// <param name="tools">Optional list of tools (AITool implementations) available to the agent.</param>
 	/// <returns>A configured ChatClientAgent instance.</returns>
-	public ChatClientAgent CreateAgent(
+    public AIAgent CreateAgent(
         string name,
         string instructions,
-        IList<AIFunction>? tools = null)
+        IList<AITool>? tools = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         ArgumentException.ThrowIfNullOrWhiteSpace(instructions, nameof(instructions));
 
         _logger.LogInformation("Creating agent {AgentName} with {ToolCount} tools", name, tools?.Count ?? 0);
 
-        // Convert AIFunction list to AITool list (AIFunction implements AITool)
-        IList<AITool>? aiTools = tools?.Cast<AITool>().ToList();
-
         var agent = new ChatClientAgent(
-            chatClient: _chatClient,
-            instructions: instructions,
+            _chatClient,
             name: name,
-            tools: aiTools);
-
+            instructions: instructions,
+            tools: tools);
+                              		
         return agent;
     }
 
@@ -51,7 +48,7 @@ public class AgentFactory(
     /// Creates the Triage Agent that routes user requests to specialist agents.
     /// </summary>
     /// <returns>A configured triage agent.</returns>
-    public ChatClientAgent CreateTriageAgent()
+    public AIAgent CreateTriageAgent()
     {
         var instructions = AgentInstructions.TriageAgentInstructions;
         
@@ -61,10 +58,15 @@ public class AgentFactory(
             tools: null);
     }
 
-    public async Task<ChatClientAgent> CreateAccountAgentAsync(IList<AIFunction> accountTools)
+    public AIAgent CreateAccountAgent(IList<AITool> accountTools)
     {
         var loggedUser = _userService.GetLoggedUser();
-        var instructions = string.Format(AgentInstructions.AccountAgentInstructions, loggedUser);
+        var userContext = $"""
+User: {loggedUser.displayName}
+Email: {loggedUser.mail}
+Account ID: {loggedUser.accountId}
+""";
+        var instructions = string.Format(AgentInstructions.AccountAgentInstructions, userContext);
         
         return CreateAgent(
             name: "AccountAgent",
@@ -80,16 +82,21 @@ public class AgentFactory(
     /// <param name="transactionTools">The list of transaction-related tools.</param>
     /// <param name="invoiceScanTools">The list of invoice scanning tools.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the configured payment agent.</returns>
-    public async Task<ChatClientAgent> CreatePaymentAgentAsync(
-        IList<AIFunction> paymentTools,
-        IList<AIFunction> accountTools,
-        IList<AIFunction> transactionTools,
-        IList<AIFunction> invoiceScanTools)
+    public AIAgent CreatePaymentAgent(
+        IList<AITool> paymentTools,
+        IList<AITool> accountTools,
+        IList<AITool> transactionTools,
+        IList<AITool> invoiceScanTools)
     {
         var loggedUser = _userService.GetLoggedUser();
-        var instructions = string.Format(AgentInstructions.PaymentAgentInstructions, loggedUser);
+        var userContext = $"""
+User: {loggedUser.displayName}
+Email: {loggedUser.mail}
+Account ID: {loggedUser.accountId}
+""";
+        var instructions = string.Format(AgentInstructions.PaymentAgentInstructions, userContext);
         
-        var allTools = new List<AIFunction>();
+        var allTools = new List<AITool>();
         allTools.AddRange(paymentTools);
         allTools.AddRange(accountTools);
         allTools.AddRange(transactionTools);
@@ -107,17 +114,22 @@ public class AgentFactory(
     /// <param name="accountTools">The list of account-related tools.</param>
     /// <param name="transactionTools">The list of transaction-related tools.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the configured transactions agent.</returns>
-    public async Task<ChatClientAgent> CreateTransactionsAgentAsync(
-        IList<AIFunction> accountTools,
-        IList<AIFunction> transactionTools)
+    public AIAgent CreateTransactionsAgent(
+        IList<AITool> accountTools,
+        IList<AITool> transactionTools)
     {
         var loggedUser = _userService.GetLoggedUser();
-        var instructions = string.Format(AgentInstructions.TransactionsReportingAgentInstructions, loggedUser);
+        var userContext = $"""
+User: {loggedUser.displayName}
+Email: {loggedUser.mail}
+Account ID: {loggedUser.accountId}
+""";
+        var instructions = string.Format(AgentInstructions.TransactionsReportingAgentInstructions, userContext);
         
-        var allTools = new List<AIFunction>();
+        var allTools = new List<AITool>();
         allTools.AddRange(accountTools);
         allTools.AddRange(transactionTools);
-        
+                
         return CreateAgent(
             name: "TransactionsAgent",
             instructions: instructions,

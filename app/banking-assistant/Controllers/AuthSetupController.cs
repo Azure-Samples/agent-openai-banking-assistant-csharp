@@ -13,7 +13,7 @@ public class AuthSetupController : ControllerBase
     /// </summary>
     /// <returns>An object indicating whether login is required.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> IndexAsync()
     {
         return await Task.FromResult(Ok(new { UseLogin = false }));
     }

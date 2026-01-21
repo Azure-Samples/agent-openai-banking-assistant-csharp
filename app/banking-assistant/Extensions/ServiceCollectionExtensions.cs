@@ -1,4 +1,13 @@
-﻿namespace BankingAssistant.Extensions;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using Azure.Monitor.OpenTelemetry.Exporter;
+using FluentValidation;
+
+namespace BankingAssistant.Extensions;
 
 /// <summary>
 /// Extension methods for IServiceCollection to add Azure services and agent infrastructure.
@@ -6,13 +15,135 @@
 public static class ServicesExtensions
 {
     /// <summary>
+    /// Adds the OpenTelemetry configuration extension method.
+    /// </summary>
+    public static IServiceCollection AddOpenTelemetryConfiguration(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
+    {
+        var appInsightsActiveString = configuration.GetValue<string>("ApplicationInsights:Active") ?? "false";
+        var appInsightsActive = bool.TryParse(appInsightsActiveString, out var result) && result;
+
+        var resourceBuilder = ResourceBuilder
+            .CreateDefault()
+            .AddService("BankingAssistant");
+
+        if (appInsightsActive)
+        {
+            var appInsightsConnectionString = configuration.GetValue<string>("ApplicationInsights:ConnectionString");
+
+            if (!string.IsNullOrEmpty(appInsightsConnectionString))
+            {
+                // Configure Traces
+                services.AddOpenTelemetry()
+                    .WithTracing(tracing => tracing
+                        .SetResourceBuilder(resourceBuilder)
+                        .AddSource("BankingAssistant")
+                        .AddSource("*Microsoft.Extensions.AI")
+                        .AddSource("*Microsoft.Extensions.Agents*")
+                        .AddAzureMonitorTraceExporter(options =>
+                            options.ConnectionString = appInsightsConnectionString));
+
+                // Configure Metrics
+                services.AddOpenTelemetry()
+                    .WithMetrics(metrics => metrics
+                        .SetResourceBuilder(resourceBuilder)
+                        .AddMeter("BankingAssistant")
+                        .AddMeter("*Microsoft.Agents.AI")
+                        .AddAzureMonitorMetricExporter(options =>
+                            options.ConnectionString = appInsightsConnectionString));
+            }
+        }
+        else if (environment.IsDevelopment())
+        {
+            // For development without Application Insights, export to Aspire Dashboard
+            services.AddOpenTelemetry()
+                .WithTracing(tracing => tracing
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddSource("BankingAssistant")
+                    .AddSource("*Microsoft.Extensions.AI")
+                    .AddSource("*Microsoft.Extensions.Agents*")
+                    .AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317")))
+                .WithMetrics(metrics => metrics
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddMeter("BankingAssistant")
+                    .AddMeter("*Microsoft.Agents.AI")
+                    .AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317")));
+        }
+
+        return services;
+    }
+
+    /// <summary>
+    /// Configures authentication based on the hosting environment.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="environment">The hosting environment.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAuthenticationConfiguration(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
+    {
+        if (environment.IsDevelopment())
+        {
+            // In development, use the fake authentication scheme.
+            services.AddAuthentication("Fake")
+                .AddScheme<AuthenticationSchemeOptions, FakeAuthenticationHandler>("Fake", options => { });
+        }
+        else
+        {
+            // In production or staging, use JWT Bearer authentication via Azure AD.
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
+        }
+
+        services.AddAuthorization();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds CORS and validation support to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddValidationAndCors(this IServiceCollection services)
+    {
+        // @TODO: Temporary. Fix later.
+        services.AddCors(options => options.AddPolicy("allowSpecificOrigins", 
+            policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+        // Register FluentValidation
+        services.AddValidatorsFromAssemblyContaining<Program>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds OpenAPI documentation support.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
+    {
+        services.AddOpenApi();
+        return services;
+    }
+
+    /// <summary>
     /// Adds all Azure services and agent infrastructure to the service collection.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The application configuration.</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddAzureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAzureServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment? environment = null)
     {
+        // Add Controllers support
+        services.AddControllers();
+        
         var tenantId = configuration["AzureAd:TenantId"];
         var credentialOptions = new DefaultAzureCredentialOptions();
         
@@ -29,10 +160,11 @@ public static class ServicesExtensions
         {
             var accountName = configuration["Storage:AccountName"];
             var storageEndpoint = $"https://{accountName}.blob.core.windows.net";
-            Console.WriteLine($"BlobServiceClient: {storageEndpoint}");
-            var blobServiceClient = new BlobServiceClient(
-                new Uri(storageEndpoint),
-                credential);
+            var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("BlobServiceClient");
+            
+            logger.LogInformation("Initializing BlobServiceClient: {StorageEndpoint}", storageEndpoint);
+            var blobServiceClient = new BlobServiceClient(new Uri(storageEndpoint), credential);
+            
             return blobServiceClient;
         });
 
@@ -41,6 +173,7 @@ public static class ServicesExtensions
         {
             var blobServiceClient = provider.GetRequiredService<BlobServiceClient>();
             var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger<BlobStorageProxy>();
+            
             return new BlobStorageProxy(blobServiceClient, logger, configuration);
         });
 
@@ -49,22 +182,27 @@ public static class ServicesExtensions
         {
             var endpoint = configuration["DocumentIntelligence:Endpoint"]
                 ?? throw new InvalidOperationException("DocumentIntelligence:Endpoint is not configured");
+            
             return new DocumentIntelligenceClient(new Uri(endpoint), credential);
         });
 
         // Register DocumentIntelligenceProxy as IDocumentScanner.
         services.AddSingleton<IDocumentScanner, DocumentIntelligenceProxy>();
 
-        // Register IChatClient for Azure OpenAI
-        services.AddSingleton<IChatClient>(provider =>
+        // Register ChatClient for Azure OpenAI
+        services.AddSingleton(provider =>
         {
-            return ChatClientInitialization.CreateFromConfiguration(configuration);
+            var env = environment?.EnvironmentName ?? "Development";
+            return ChatClientInitialization.CreateFromConfiguration(configuration, credential, env);
         });
 
         services.AddSingleton<IUserService, LoggedUserService>();
 
+        // Register HttpClient factory for tools
+        services.AddHttpClient();
+
         // Register Microsoft Agent Framework infrastructure
-        services.AddSingleton<AgentFactory>();
+        services.AddSingleton<AgentFactory>();    
         
         // Register Agent Orchestration Service
         services.AddSingleton<AgentOrchestrationService>();

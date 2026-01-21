@@ -10,6 +10,6 @@ public interface IDocumentScanner
     /// </summary>
     /// <param name="fileName">The name of the document file to scan.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a dictionary of extracted fields.</returns>
-    public Task<Dictionary<string, string>> Scan(string fileName);
+    public Task<Dictionary<string, string>> ScanAsync(string fileName);
 }
 
