@@ -6,6 +6,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using FluentValidation;
+using BankingAssistant.Agents;
 
 namespace BankingAssistant.Extensions;
 
@@ -156,7 +157,7 @@ public static class ServicesExtensions
         var credential = new DefaultAzureCredential(credentialOptions);
         
         // Register Azure Blob Service Client via the Azure Clients builder.
-        services.AddSingleton<BlobServiceClient>(provider =>
+        services.AddSingleton(provider =>
         {
             var accountName = configuration["Storage:AccountName"];
             var storageEndpoint = $"https://{accountName}.blob.core.windows.net";
@@ -178,7 +179,7 @@ public static class ServicesExtensions
         });
 
         // Register DocumentIntelligenceClient.
-        services.AddSingleton<DocumentIntelligenceClient>(provider =>
+        services.AddSingleton(provider =>
         {
             var endpoint = configuration["DocumentIntelligence:Endpoint"]
                 ?? throw new InvalidOperationException("DocumentIntelligence:Endpoint is not configured");
@@ -188,24 +189,43 @@ public static class ServicesExtensions
 
         // Register DocumentIntelligenceProxy as IDocumentScanner.
         services.AddSingleton<IDocumentScanner, DocumentIntelligenceProxy>();
-
-        // Register ChatClient for Azure OpenAI
-        services.AddSingleton(provider =>
-        {
-            var env = environment?.EnvironmentName ?? "Development";
-            return ChatClientInitialization.CreateFromConfiguration(configuration, credential, env);
-        });
-
-        services.AddSingleton<IUserService, LoggedUserService>();
+		
+        // Register User Service
+		services.AddSingleton<IUserService, LoggedUserService>();
 
         // Register HttpClient factory for tools
         services.AddHttpClient();
+		
+		// Register IChatClient as singleton using the AzureOpenAIClient
+		services.AddSingleton<IChatClient>(provider =>
+		{
+			var endpoint = configuration["AzureOpenAI:Endpoint"]
+				?? throw new InvalidOperationException("AzureOpenAI:Endpoint is not configured");
 
-        // Register Microsoft Agent Framework infrastructure
-        services.AddSingleton<AgentFactory>();    
+			var deployment = configuration["AzureOpenAI:Deployment"]
+				?? throw new InvalidOperationException("AzureOpenAI:Deployment is not configured");
+
+			var azureOpenAIClient = new AzureOpenAIClient(new Uri(endpoint), credential);
+			var chatClient = azureOpenAIClient
+				.GetChatClient(deployment)
+				.AsIChatClient()
+				.AsBuilder()
+				.UseOpenTelemetry(sourceName: "BankingAssistant", configure: (cfg) => cfg.EnableSensitiveData = false)
+				.Build();
+
+			return chatClient;
+		});
+
+		// Register Microsoft Agent Framework infrastructure
+		services.AddSingleton<AgentFactory>();
+        
+        // Register Agent Managers
+        services.AddScoped<IAccountAgentManager, AccountAgentManager>();
+        services.AddScoped<IPaymentAgentManager, PaymentAgentManager>();
+        services.AddScoped<ITransactionAgentManager, TransactionAgentManager>();
         
         // Register Agent Orchestration Service
-        services.AddSingleton<AgentOrchestrationService>();
+        services.AddScoped<AgentOrchestrationService>();
 
         return services;
     }

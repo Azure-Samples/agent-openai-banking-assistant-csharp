@@ -16,8 +16,8 @@ public sealed class PaymentAgentManager(AgentFactory agentFactory, IConfiguratio
 	private readonly IConfiguration _configuration = configuration;
 	private readonly IDocumentScanner _documentScanner = documentScanner;
 	private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-	private readonly AgentFactory _agentFactory = agentFactory;
-	private readonly ILogger<PaymentAgentManager> _logger = loggerFactory.CreateLogger<PaymentAgentManager>();
+	private readonly AgentFactory _agentFactory = agentFactory;	
+	private readonly ILogger<PaymentAgentManager> _logger = loggerFactory.CreateLogger<PaymentAgentManager>();	
 	private readonly List<IMcpClient> _mcpClients = [];	
 
 	/// <summary>
@@ -66,9 +66,9 @@ public sealed class PaymentAgentManager(AgentFactory agentFactory, IConfiguratio
 			List<AITool> accountTools = [.. accountMcpTools.Cast<AITool>()];
 
 			// Get tools from Transactions API
-			var transactionsTool = new TransactionsHistoryTool(_httpClientFactory, _configuration, loggerFactory.CreateLogger<TransactionsHistoryTool>());
-			var transactionTools = ToolRegistrationHelper.GetCustomTools(transactionsTool, _logger);
-			
+			var transactionTool = new TransactionTool(_httpClientFactory, _configuration, loggerFactory.CreateLogger<TransactionTool>());
+			var transactionTools = ToolRegistrationHelper.GetCustomTools(transactionTool, _logger);
+
 			// Get custom InvoiceScanTool
 			var invoiceScanTool = new InvoiceScanTool(_documentScanner, loggerFactory.CreateLogger<InvoiceScanTool>());
 			var invoiceScanTools = ToolRegistrationHelper.GetCustomTools(invoiceScanTool, _logger);

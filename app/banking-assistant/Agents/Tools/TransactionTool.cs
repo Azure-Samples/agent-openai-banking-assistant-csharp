@@ -6,17 +6,17 @@ namespace BankingAssistant.Agents.Tools;
 /// Tool for retrieving transaction history by making HTTP calls to the Transactions History API.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="TransactionsHistoryTool"/> class.
+/// Initializes a new instance of the <see cref="TransactionTool"/> class.
 /// </remarks>
 /// <param name="httpClientFactory">The HTTP client factory for creating clients.</param>
 /// <param name="configuration">The application configuration.</param>
 /// <param name="logger">The logger instance.</param>
-public class TransactionsHistoryTool(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<TransactionsHistoryTool> logger)
+public class TransactionTool(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<TransactionTool> logger)
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IConfiguration _configuration = configuration;
-    private readonly ILogger<TransactionsHistoryTool> _logger = logger;
-
+    private readonly ILogger<TransactionTool> _logger = logger;
+    
     /// <summary>
     /// Retrieves transactions for a specific account from the TransactionsController.
     /// </summary>

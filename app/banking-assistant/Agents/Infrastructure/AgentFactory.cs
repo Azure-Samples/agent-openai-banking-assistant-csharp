@@ -6,7 +6,7 @@ namespace BankingAssistant.Agents.Infrastructure;
 /// <remarks>
 /// Initializes a new instance of the <see cref="AgentFactory"/> class.
 /// </remarks>
-/// <param name="chatClient">The chat client for agent communication.</param>
+/// <param name="chatClient">The singleton IChatClient instance (Azure OpenAI).</param>
 /// <param name="userService">The user service for retrieving logged user information.</param>
 /// <param name="logger">The logger instance.</param>
 public class AgentFactory(
@@ -19,7 +19,7 @@ public class AgentFactory(
     private readonly ILogger<AgentFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
 	/// <summary>
-	/// Creates a ChatClientAgent with the specified configuration.
+	/// Creates a ChatClientAgent with the specified configuration using the singleton IChatClient.
 	/// </summary>
 	/// <param name="name">The name of the agent.</param>
 	/// <param name="instructions">The system instructions for the agent.</param>
@@ -44,18 +44,17 @@ public class AgentFactory(
         return agent;
     }
 
-    /// <summary>
-    /// Creates the Triage Agent that routes user requests to specialist agents.
-    /// </summary>
-    /// <returns>A configured triage agent.</returns>
-    public AIAgent CreateTriageAgent()
+	/// <summary>
+	/// Creates the Triage Agent that routes user requests to specialist agents.
+	/// </summary>
+	/// <returns>A configured triage agent.</returns>
+	public AIAgent CreateTriageAgent()
     {
-        var instructions = AgentInstructions.TriageAgentInstructions;
+        var instructions = AgentInstructions.TriageAgentInstructions;        
         
         return CreateAgent(
             name: "TriageAgent",    
-            instructions: instructions,
-            tools: null);
+            instructions: instructions);
     }
 
     public AIAgent CreateAccountAgent(IList<AITool> accountTools)
@@ -66,7 +65,7 @@ User: {loggedUser.displayName}
 Email: {loggedUser.mail}
 Account ID: {loggedUser.accountId}
 """;
-        var instructions = string.Format(AgentInstructions.AccountAgentInstructions, userContext);
+        var instructions = string.Format(AgentInstructions.AccountAgentInstructions, userContext);        
         
         return CreateAgent(
             name: "AccountAgent",
@@ -124,13 +123,13 @@ User: {loggedUser.displayName}
 Email: {loggedUser.mail}
 Account ID: {loggedUser.accountId}
 """;
-        var instructions = string.Format(AgentInstructions.TransactionsReportingAgentInstructions, userContext);
+        var instructions = string.Format(AgentInstructions.TransactionsAgentInstructions, userContext);        
         
         var allTools = new List<AITool>();
         allTools.AddRange(accountTools);
         allTools.AddRange(transactionTools);
-                
-        return CreateAgent(
+
+		return CreateAgent(
             name: "TransactionsAgent",
             instructions: instructions,
             tools: allTools);

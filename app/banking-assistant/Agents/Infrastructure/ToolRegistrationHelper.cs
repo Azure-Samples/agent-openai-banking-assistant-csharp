@@ -8,12 +8,12 @@ namespace BankingAssistant.Agents.Infrastructure;
 public static class ToolRegistrationHelper
 {
     /// <summary>
-    /// Loads an OpenAPI specification and converts its operations to AITools.
+    /// Loads an OpenAPI specification and converts each operation to individual AITools.
     /// </summary>
     /// <param name="apiName">The name of the API (used to locate the embedded YAML file).</param>
     /// <param name="apiUrl">The base URL of the API.</param>
     /// <param name="logger">Optional logger for diagnostic information.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of AITools.</returns>
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of AITools, one for each operation.</returns>
     public static async Task<IList<AITool>> GetOpenApiToolsAsync(
         string apiName,
         string apiUrl,
@@ -22,17 +22,18 @@ public static class ToolRegistrationHelper
         ArgumentException.ThrowIfNullOrWhiteSpace(apiName, nameof(apiName));
         ArgumentException.ThrowIfNullOrWhiteSpace(apiUrl, nameof(apiUrl));
 
-        logger?.LogInformation("Loading OpenAPI tool for {ApiName}", apiName);
+        logger?.LogInformation("Loading OpenAPI specification for {ApiName}", apiName);
 
         try
         {
             var stream = GetEmbeddedApiYaml(apiName) ?? throw new InvalidOperationException($"Could not find embedded YAML for {apiName}");
-			var tool = await AIToolAdapter.ConvertOpenApiToToolAsync(stream, apiName, logger);
-            return [tool];
+            var tools = await AIToolAdapter.ConvertOpenApiOperationsToToolsAsync(stream, apiName, apiUrl, logger);
+            logger?.LogInformation("Created {ToolCount} AITools from OpenAPI specification {ApiName}", tools.Count, apiName);
+            return tools;
         }
         catch (Exception ex)
         {
-            logger?.LogError(ex, "Error loading OpenAPI tool for {ApiName}", apiName);
+            logger?.LogError(ex, "Error loading OpenAPI specification for {ApiName}", apiName);
             throw;
         }
     }

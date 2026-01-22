@@ -14,11 +14,12 @@ public sealed class AccountAgentManager(AgentFactory agentFactory, IConfiguratio
     private readonly ILogger<AccountAgentManager> _logger = loggerFactory.CreateLogger<AccountAgentManager>();
     private readonly IConfiguration _configuration = configuration;
     private readonly AgentFactory _agentFactory = agentFactory;
-    private IMcpClient? _mcpClient = null;
+    private readonly List<IMcpClient> _mcpClients = [];
 
 	/// <summary>
 	/// Asynchronously creates a new <see cref="AIAgent"/> instance.
-	/// Manages MCP client creation, tool loading, and disposal within this call.
+	/// Manages MCP client creation and tool loading. The MCP client is kept alive
+	/// until the manager is disposed to ensure the agent can use tools throughout its lifetime.
 	/// </summary>
 	/// <returns>A task that represents the asynchronous operation. The task result contains the created <see cref="AIAgent"/>.</returns>
 	public async Task<AIAgent> CreateAgentAsync()
@@ -32,20 +33,21 @@ public sealed class AccountAgentManager(AgentFactory agentFactory, IConfiguratio
         var mcpUrl = $"{accountsApiUrl}/mcp";
         _logger.LogInformation("MCP Server URL: {McpUrl}", mcpUrl);
 
-        // Create and manage MCP client within this method scope
-        _mcpClient = await McpClientFactory.CreateAsync(
-            new SseClientTransport(
-                new SseClientTransportOptions()
-                {
-                    Endpoint = new Uri(mcpUrl),
-                    Name = "banking-assistant-client",
-                    UseStreamableHttp = true
-                }));
-
         try
         {
+            // Create and keep MCP client alive for the lifetime of the agent
+            var mcpClient = await McpClientFactory.CreateAsync(
+                new SseClientTransport(
+                    new SseClientTransportOptions()
+                    {
+                        Endpoint = new Uri(mcpUrl),
+                        Name = "banking-assistant-client",
+                        UseStreamableHttp = true
+                    }));
+            _mcpClients.Add(mcpClient);
+
             // Get MCP tools from Account API
-            var mcpTools = await _mcpClient.ListToolsAsync();
+            var mcpTools = await mcpClient.ListToolsAsync();
             List<AITool> accountTools = [..mcpTools.Cast<AITool>()];
 
             _logger.LogInformation("Account Agent Builder loaded {ToolCount} tools", accountTools.Count);
@@ -73,23 +75,22 @@ public sealed class AccountAgentManager(AgentFactory agentFactory, IConfiguratio
     }
 
     /// <summary>
-    /// Disposes the MCP client connection when the agent is no longer needed.
+    /// Disposes all MCP client connections when the agent is no longer needed.
     /// </summary>
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        try
+        foreach (var client in _mcpClients)
         {
-            _logger.LogInformation("Disposing Account Agent MCP client");
-            
-            if (_mcpClient != null)
+            try
             {
-                await _mcpClient.DisposeAsync();
-                _mcpClient = null;
+                _logger.LogInformation("Disposing Account Agent MCP client");
+                await client.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing Account Agent MCP client");
             }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error disposing MCP client");
-        }
+        _mcpClients.Clear();
     }
 }

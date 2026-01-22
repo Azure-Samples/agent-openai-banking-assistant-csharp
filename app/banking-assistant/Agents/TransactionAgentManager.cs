@@ -1,22 +1,23 @@
 ﻿namespace BankingAssistant.Agents;
 
 /// <summary>
-/// Manager for Transactions Reporting Agents.
+/// Manager for Transaction Agents.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="TransactionsReportingAgentManager"/> class.
+/// Initializes a new instance of the <see cref="TransactionAgentManager"/> class.
 /// </remarks>
 /// <param name="agentFactory">The agent factory for creating ChatClientAgent instances.</param>
 /// <param name="configuration">The application configuration.</param>
 /// <param name="httpClientFactory">The HTTP client factory for creating HTTP clients.</param>
 /// <param name="loggerFactory">The logger factory for creating additional loggers.</param>
-public sealed class TransactionsReportingAgentManager(AgentFactory agentFactory, IConfiguration configuration, IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory) : ITransactionsReportingAgentManager, IAsyncDisposable
+public sealed class TransactionAgentManager(AgentFactory agentFactory, IConfiguration configuration, IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory) : ITransactionAgentManager, IAsyncDisposable
 {
-    private readonly ILogger<TransactionsReportingAgentManager> _logger = loggerFactory.CreateLogger<TransactionsReportingAgentManager>();
-    private readonly IConfiguration _configuration = configuration;
     private readonly AgentFactory _agentFactory = agentFactory;
-    private readonly List<IMcpClient> _mcpClients = [];
+    private readonly IConfiguration _configuration = configuration;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly ILoggerFactory _loggerFactory = loggerFactory;
+    private readonly ILogger<TransactionAgentManager> _logger = loggerFactory.CreateLogger<TransactionAgentManager>();    
+    private readonly List<IMcpClient> _mcpClients = [];    
 
 	/// <summary>
 	/// Asynchronously creates a new <see cref="AIAgent"/> instance.
@@ -48,19 +49,19 @@ public sealed class TransactionsReportingAgentManager(AgentFactory agentFactory,
             var accountMcpTools = await accountClient.ListToolsAsync();
             List<AITool> accountTools = [..accountMcpTools.Cast<AITool>()];
 
-			// Get tools from Transactions API
-			var transactionsHistoryTool = new TransactionsHistoryTool(_httpClientFactory, _configuration, loggerFactory.CreateLogger<TransactionsHistoryTool>());
-			var transactionTools = ToolRegistrationHelper.GetCustomTools(transactionsHistoryTool, _logger);
+            // Get tools from Transactions API
+            var transactionTool = new TransactionTool(_httpClientFactory, _configuration, _loggerFactory.CreateLogger<TransactionTool>());
+            var transactionTools = ToolRegistrationHelper.GetCustomTools(transactionTool, _logger);
 
-			// Create agent using factory
-			return _agentFactory.CreateTransactionsAgent(
+            // Create agent using factory
+            return _agentFactory.CreateTransactionsAgent(
                 accountTools,
                 transactionTools
             );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating TransactionsReportingAgent");
+            _logger.LogError(ex, "Error creating TransactionAgent");
             throw;
         }
     }
@@ -74,7 +75,7 @@ public sealed class TransactionsReportingAgentManager(AgentFactory agentFactory,
         {
             try
             {
-                _logger.LogInformation("Disposing TransactionsReportingAgent MCP client");
+                _logger.LogInformation("Disposing TransactionAgent MCP client");
                 await client.DisposeAsync();
             }
             catch (Exception ex)

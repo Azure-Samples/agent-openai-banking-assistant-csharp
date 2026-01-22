@@ -5,18 +5,16 @@ namespace BankingAssistant.Agents.Orchestration;
 /// </summary>
 public class AgentOrchestrationService(
 	AgentFactory agentFactory,
-	IConfiguration configuration,
-	IDocumentScanner documentScanner,
-    IHttpClientFactory httpClientFactory,
 	ILogger<AgentOrchestrationService> logger,
-	ILoggerFactory loggerFactory)
+	IAccountAgentManager accountAgentManager,
+	IPaymentAgentManager paymentAgentManager,
+	ITransactionAgentManager transactionAgentManager)
 {
     private readonly AgentFactory _agentFactory = agentFactory;
-    private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<AgentOrchestrationService> _logger = logger;
-    private readonly ILoggerFactory _loggerFactory = loggerFactory;
-    private readonly IDocumentScanner _documentScanner = documentScanner;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IAccountAgentManager _accountAgentManager = accountAgentManager;
+    private readonly IPaymentAgentManager _paymentAgentManager = paymentAgentManager;
+    private readonly ITransactionAgentManager _transactionAgentManager = transactionAgentManager;
 
 	/// <summary>
 	/// Executes the agent workflow with handoff orchestration.
@@ -32,11 +30,7 @@ public class AgentOrchestrationService(
         var userMessage = messages.Last()?.ToString() ?? "Unknown";
         _logger.LogInformation("User message: {Message}", userMessage);
         
-        await using var accountAgentManager = new AccountAgentManager(_agentFactory, _configuration, _loggerFactory);
-        await using var paymentAgentManager = new PaymentAgentManager(_agentFactory, _configuration, _documentScanner, _httpClientFactory, _loggerFactory);
-        await using var transactionsAgentManager = new TransactionsReportingAgentManager(_agentFactory, _configuration, _httpClientFactory, _loggerFactory);
-
-        var workflow = await BuildWorkflowAsync(accountAgentManager, paymentAgentManager, transactionsAgentManager);
+        var workflow = await BuildWorkflowAsync(_accountAgentManager, _paymentAgentManager, _transactionAgentManager);
 
         // Execute workflow
         var run = await InProcessExecution.StreamAsync(workflow, messages);
@@ -45,9 +39,9 @@ public class AgentOrchestrationService(
         List<ChatMessage> newMessages = [];
         await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
         {
-            if (evt is AgentRunUpdateEvent updateEvent)
+            if (evt is AgentRunUpdateEvent runUpdateEvent)
             {
-                _logger.LogInformation("{ExecutorId}: {Data}", updateEvent.ExecutorId, updateEvent.Data);
+                _logger.LogInformation("{ExecutorId}: {Data}", runUpdateEvent.ExecutorId, runUpdateEvent.Data);
             }
             else if (evt is WorkflowOutputEvent outputEvent)
             {
@@ -59,8 +53,11 @@ public class AgentOrchestrationService(
 
         _logger.LogInformation("Agent orchestration workflow completed");
 
-        // Return all messages from the workflow, not just new ones
-        return (newMessages, context);
+        // Add new messages to conversation history (multi-turn accumulation)
+        messages.AddRange(newMessages.Skip(messages.Count));
+
+        // Return updated messages with full conversation history
+        return (messages, context);
     }
 
     /// <summary>
@@ -75,11 +72,7 @@ public class AgentOrchestrationService(
     {
         _logger.LogInformation("Starting agent orchestration workflow (streaming)");
         
-        await using var accountAgentManager = new AccountAgentManager(_agentFactory, _configuration, _loggerFactory);
-        await using var paymentAgentManager = new PaymentAgentManager(_agentFactory, _configuration, _documentScanner, _httpClientFactory, _loggerFactory);
-        await using var transactionsAgentManager = new TransactionsReportingAgentManager(_agentFactory, _configuration, _httpClientFactory, _loggerFactory);
-
-        var workflow = await BuildWorkflowAsync(accountAgentManager, paymentAgentManager, transactionsAgentManager);
+        var workflow = await BuildWorkflowAsync(_accountAgentManager, _paymentAgentManager, _transactionAgentManager);
 
         // Execute workflow
         var run = await InProcessExecution.StreamAsync(workflow, messages);
@@ -87,11 +80,11 @@ public class AgentOrchestrationService(
 
         await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
         {
-            if (evt is AgentRunUpdateEvent updateEvent)
+            if (evt is AgentRunUpdateEvent runUpdateEvent)
             {
                 // Stream agent responses as they come
-                _logger.LogInformation($"{updateEvent.ExecutorId}: {updateEvent.Data}");
-                yield return updateEvent.Data?.ToString() ?? string.Empty;
+                _logger.LogInformation($"{runUpdateEvent.ExecutorId}: {runUpdateEvent.Data}");
+                yield return runUpdateEvent.Data?.ToString() ?? string.Empty;
             }
             else if (evt is WorkflowOutputEvent outputEvent)
             {
@@ -132,8 +125,7 @@ public class AgentOrchestrationService(
         try
         {
             _logger.LogInformation("Creating Account Agent with MCP tools...");
-            await using var accountAgentManager = new AccountAgentManager(_agentFactory, _configuration, _loggerFactory);
-            var accountAgent = await accountAgentManager.CreateAgentAsync();
+            var accountAgent = await _accountAgentManager.CreateAgentAsync();
             _logger.LogInformation("Account Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
@@ -167,8 +159,7 @@ public class AgentOrchestrationService(
         try
         {
             _logger.LogInformation("Creating Payment Agent with MCP tools...");
-            await using var paymentAgentManager = new PaymentAgentManager(_agentFactory, _configuration, _documentScanner, _httpClientFactory, _loggerFactory);
-            var paymentAgent = await paymentAgentManager.CreateAgentAsync();
+            var paymentAgent = await _paymentAgentManager.CreateAgentAsync();
             _logger.LogInformation("Payment Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
@@ -201,13 +192,12 @@ public class AgentOrchestrationService(
 
         try
         {
-            _logger.LogInformation("Creating Transactions Agent with MCP tools...");
-            await using var transactionsReportingAgentManager = new TransactionsReportingAgentManager(_agentFactory, _configuration, _httpClientFactory, _loggerFactory);
-            var transactionsAgent = await transactionsReportingAgentManager.CreateAgentAsync();
-            _logger.LogInformation("Transactions Agent created successfully");
+            _logger.LogInformation("Creating Transaction Agent with MCP tools...");            
+            var transactionAgent = await _transactionAgentManager.CreateAgentAsync();
+            _logger.LogInformation("Transaction Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
-            var response = await transactionsAgent.RunAsync(messages);
+            var response = await transactionAgent.RunAsync(messages);
             
             _logger.LogInformation("Agent response received");
             
@@ -263,7 +253,7 @@ public class AgentOrchestrationService(
     private async Task<Workflow> BuildWorkflowAsync(
         IAccountAgentManager accountAgentManager,
         IPaymentAgentManager paymentAgentManager,
-        ITransactionsReportingAgentManager transactionsAgentManager)
+        ITransactionAgentManager transactionAgentManager)
     {
         _logger.LogInformation("Building agent workflow...");
         
@@ -280,17 +270,17 @@ public class AgentOrchestrationService(
         var paymentAgent = await paymentAgentManager.CreateAgentAsync();
         _logger.LogInformation("Payment Agent loaded");
         
-        _logger.LogInformation("Loading Transactions Agent...");
-        var transactionsAgent = await transactionsAgentManager.CreateAgentAsync();
-        _logger.LogInformation("Transactions Agent loaded");
+        _logger.LogInformation("Loading Transaction Agent...");
+        var transactionAgent = await transactionAgentManager.CreateAgentAsync();
+        _logger.LogInformation("Transaction Agent loaded");
 
         // Build handoff workflow with routing rules
         _logger.LogInformation("Configuring handoff workflow...");
         var workflow = AgentWorkflowBuilder.CreateHandoffBuilderWith(triageAgent)
-			.WithHandoffs(triageAgent, [accountAgent, paymentAgent, transactionsAgent])
+			.WithHandoffs(triageAgent, [accountAgent, paymentAgent, transactionAgent])
             .WithHandoff(accountAgent, triageAgent)
             .WithHandoff(paymentAgent, triageAgent)
-            .WithHandoff(transactionsAgent, triageAgent)
+            .WithHandoff(transactionAgent, triageAgent)
             .Build();
 
         _logger.LogInformation("Workflow built successfully");
