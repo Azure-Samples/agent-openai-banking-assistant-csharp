@@ -50,6 +50,12 @@ public sealed class PaymentAgentManager(AgentFactory agentFactory, IConfiguratio
 			_mcpClients.Add(paymentClient);
 			var paymentMcpTools = await paymentClient.ListToolsAsync();
 			List<AITool> paymentTools = [.. paymentMcpTools.Cast<AITool>()];
+			_logger.LogInformation("Payment Agent loaded {PaymentToolCount} tools from Payment API", paymentTools.Count);
+			foreach (var tool in paymentTools)
+			{
+				_logger.LogInformation("Payment Tool - Name: {ToolName}, Description: {Description}", 
+					tool.Name, tool.Description);
+			}
 
 			// Get MCP tools from Account API
 			var accountClient = await McpClientFactory.CreateAsync(
@@ -64,16 +70,26 @@ public sealed class PaymentAgentManager(AgentFactory agentFactory, IConfiguratio
 
 			var accountMcpTools = await accountClient.ListToolsAsync();
 			List<AITool> accountTools = [.. accountMcpTools.Cast<AITool>()];
+			_logger.LogInformation("Payment Agent loaded {AccountToolCount} tools from Account API", accountTools.Count);
+			foreach (var tool in accountTools)
+			{
+				_logger.LogInformation("Account Tool - Name: {ToolName}, Description: {Description}", 
+					tool.Name, tool.Description);
+			}
 
 			// Get tools from Transactions API
 			var transactionTool = new TransactionTool(_httpClientFactory, _configuration, loggerFactory.CreateLogger<TransactionTool>());
 			var transactionTools = ToolRegistrationHelper.GetCustomTools(transactionTool, _logger);
+			_logger.LogInformation("Payment Agent loaded {TransactionToolCount} custom tools from Transactions API", transactionTools.Count);
 
 			// Get custom InvoiceScanTool
 			var invoiceScanTool = new InvoiceScanTool(_documentScanner, loggerFactory.CreateLogger<InvoiceScanTool>());
 			var invoiceScanTools = ToolRegistrationHelper.GetCustomTools(invoiceScanTool, _logger);
+			_logger.LogInformation("Payment Agent loaded {InvoiceScanToolCount} custom invoice scan tools", invoiceScanTools.Count);
 			
 			// Create agent using factory
+			_logger.LogInformation("Payment Agent created successfully with {TotalToolCount} total tools", 
+				paymentTools.Count + accountTools.Count + transactionTools.Count + invoiceScanTools.Count);
 			return _agentFactory.CreatePaymentAgent(
 				paymentTools,
 				accountTools,

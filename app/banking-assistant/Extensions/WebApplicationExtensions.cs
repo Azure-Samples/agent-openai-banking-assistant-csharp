@@ -1,4 +1,5 @@
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.HttpLogging;
 
 namespace BankingAssistant.Extensions;
 
@@ -21,6 +22,9 @@ public static class WebApplicationExtensions
             app.MapScalarApiReference();
             app.UseCors("allowSpecificOrigins");
         }
+
+        // Enable HTTP logging for capturing request/response details
+        app.UseHttpLogging();
 
         // app.UseHttpsRedirection();
 

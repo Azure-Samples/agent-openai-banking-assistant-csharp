@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
@@ -30,6 +31,16 @@ public static class ServicesExtensions
             .CreateDefault()
             .AddService("BankingAssistant");
 
+        // Add HTTP logging service for capturing request/response details
+        services.AddHttpLogging(options =>
+        {
+            options.LoggingFields = HttpLoggingFields.All;
+            options.RequestHeaders.Add("Authorization");
+            options.ResponseHeaders.Add("Content-Type");
+            options.ResponseHeaders.Add("Content-Length");
+            options.MediaTypeOptions.AddText("application/json");
+        });
+
         if (appInsightsActive)
         {
             var appInsightsConnectionString = configuration.GetValue<string>("ApplicationInsights:ConnectionString");
@@ -43,6 +54,18 @@ public static class ServicesExtensions
                         .AddSource("BankingAssistant")
                         .AddSource("*Microsoft.Extensions.AI")
                         .AddSource("*Microsoft.Extensions.Agents*")
+                        .AddAspNetCoreInstrumentation(options =>
+                        {
+                            options.RecordException = true;
+                            options.EnrichWithHttpRequest = (activity, request) =>
+                            {
+                                activity.SetTag("http.request.body.size", request.ContentLength);
+                            };
+                            options.EnrichWithHttpResponse = (activity, response) =>
+                            {
+                                activity.SetTag("http.response.body.size", response.ContentLength);
+                            };
+                        })
                         .AddAzureMonitorTraceExporter(options =>
                             options.ConnectionString = appInsightsConnectionString));
 
@@ -52,6 +75,7 @@ public static class ServicesExtensions
                         .SetResourceBuilder(resourceBuilder)
                         .AddMeter("BankingAssistant")
                         .AddMeter("*Microsoft.Agents.AI")
+                        .AddAspNetCoreInstrumentation()
                         .AddAzureMonitorMetricExporter(options =>
                             options.ConnectionString = appInsightsConnectionString));
             }
@@ -65,11 +89,24 @@ public static class ServicesExtensions
                     .AddSource("BankingAssistant")
                     .AddSource("*Microsoft.Extensions.AI")
                     .AddSource("*Microsoft.Extensions.Agents*")
+                    .AddAspNetCoreInstrumentation(options =>
+                    {
+                        options.RecordException = true;
+                        options.EnrichWithHttpRequest = (activity, request) =>
+                        {
+                            activity.SetTag("http.request.body.size", request.ContentLength);
+                        };
+                        options.EnrichWithHttpResponse = (activity, response) =>
+                        {
+                            activity.SetTag("http.response.body.size", response.ContentLength);
+                        };
+                    })
                     .AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317")))
                 .WithMetrics(metrics => metrics
                     .SetResourceBuilder(resourceBuilder)
                     .AddMeter("BankingAssistant")
                     .AddMeter("*Microsoft.Agents.AI")
+                    .AddAspNetCoreInstrumentation()
                     .AddOtlpExporter(options => options.Endpoint = new Uri("http://localhost:4317")));
         }
 

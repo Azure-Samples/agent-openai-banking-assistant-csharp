@@ -48,12 +48,21 @@ public sealed class TransactionAgentManager(AgentFactory agentFactory, IConfigur
 
             var accountMcpTools = await accountClient.ListToolsAsync();
             List<AITool> accountTools = [..accountMcpTools.Cast<AITool>()];
+            _logger.LogInformation("Transaction Agent loaded {AccountToolCount} tools from Account API", accountTools.Count);
+            foreach (var tool in accountTools)
+            {
+                _logger.LogInformation("Account Tool - Name: {ToolName}, Description: {Description}", 
+                    tool.Name, tool.Description);
+            }
 
             // Get tools from Transactions API
             var transactionTool = new TransactionTool(_httpClientFactory, _configuration, _loggerFactory.CreateLogger<TransactionTool>());
             var transactionTools = ToolRegistrationHelper.GetCustomTools(transactionTool, _logger);
+            _logger.LogInformation("Transaction Agent loaded {TransactionToolCount} custom tools from Transactions API", transactionTools.Count);
 
             // Create agent using factory
+            _logger.LogInformation("Transaction Agent created successfully with {TotalToolCount} total tools", 
+                accountTools.Count + transactionTools.Count);
             return _agentFactory.CreateTransactionsAgent(
                 accountTools,
                 transactionTools
