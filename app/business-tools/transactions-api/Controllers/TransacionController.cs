@@ -1,5 +1,7 @@
 namespace TransactionsApi.Controllers;
 
+using System.Diagnostics;
+
 /// <summary>
 /// Controller for managing transaction-related operations.
 /// </summary>
@@ -11,6 +13,7 @@ public class TransactionsController(
 {
     private readonly ITransactionService _transactionService = transactionService;
     private readonly ILogger<TransactionsController> _logger = logger;
+    private static readonly ActivitySource ControllerActivitySource = new ActivitySource("TransactionsApi.Controllers.TransactionsController");
 
     /// <summary>
     /// Retrieves transactions for a specific account, optionally filtered by recipient name.
@@ -23,6 +26,11 @@ public class TransactionsController(
         string accountId,
         [FromQuery(Name = "recipient_name")] string? recipientName)
     {
+        using var activity = ControllerActivitySource.StartActivity("GetTransactions");
+        activity?.SetTag("operation.name", "GetTransactions");
+        activity?.SetTag("api.input.accountId", accountId);
+        activity?.SetTag("api.input.recipientName", recipientName ?? "none");
+
         _logger.LogInformation(
             "Received request to get transactions for accountid[{AccountId}]. Recipient filter is[{RecipientName}]",
             accountId,
@@ -31,17 +39,23 @@ public class TransactionsController(
 
         try
         {
+            List<Transaction> result;
             if (!string.IsNullOrEmpty(recipientName))
             {
-                return _transactionService.GetTransactionsByRecipientName(accountId, recipientName);
+                result = _transactionService.GetTransactionsByRecipientName(accountId, recipientName);
             }
             else
             {
-                return _transactionService.GetLastTransactions(accountId);
+                result = _transactionService.GetLastTransactions(accountId);
             }
+            
+            activity?.SetTag("api.output.transactionCount", result?.Count ?? 0);
+            return result;
         }
         catch (ArgumentException ex)
         {
+            activity?.SetTag("api.output.status", "error");
+            activity?.SetTag("api.output.exception", ex.GetType().Name);
             _logger.LogWarning(ex, "Invalid account ID");
             return BadRequest(ex.Message);
         }
@@ -58,6 +72,12 @@ public class TransactionsController(
         string accountId,
         [FromBody] Transaction transaction)
     {
+        using var activity = ControllerActivitySource.StartActivity("NotifyTransaction");
+        activity?.SetTag("operation.name", "NotifyTransaction");
+        activity?.SetTag("api.input.accountId", accountId);
+        activity?.SetTag("api.input.transactionAmount", transaction?.Amount ?? 0);
+        activity?.SetTag("api.input.transactionRecipient", transaction?.Recipient ?? "unknown");
+
         _logger.LogInformation(
             "Received request to notify transaction for accountid[{AccountId}]. {Transaction}",
             accountId,
@@ -67,15 +87,20 @@ public class TransactionsController(
         try
         {
             _transactionService.NotifyTransaction(accountId, transaction);
+            activity?.SetTag("api.output.status", "success");
             return Ok();
         }
         catch (ArgumentException ex)
         {
+            activity?.SetTag("api.output.status", "invalid");
+            activity?.SetTag("api.output.exception", ex.GetType().Name);
             _logger.LogWarning(ex, "Invalid account ID");
             return BadRequest(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
+            activity?.SetTag("api.output.status", "error");
+            activity?.SetTag("api.output.exception", ex.GetType().Name);
             _logger.LogError(ex, "Error notifying transaction");
             return StatusCode(500, ex.Message);
         }

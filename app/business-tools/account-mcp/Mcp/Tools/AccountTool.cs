@@ -1,5 +1,7 @@
 namespace AccountMcp.Mcp.Tools;
 
+using System.Diagnostics;
+
 /// <summary>
 /// MCP tool for managing account-related operations.
 /// </summary>
@@ -8,6 +10,7 @@ public class AccountTool(IAccountService accountService, ILogger<AccountTool> lo
 {
     private readonly IAccountService _accountService = accountService;
     private readonly ILogger<AccountTool> _logger = logger;
+    private static readonly ActivitySource ToolActivitySource = new ActivitySource("AccountMcp.Tools.AccountTool");
 
     /// <summary>
     /// Retrieves account details and available payment methods for a specific account.
@@ -17,8 +20,21 @@ public class AccountTool(IAccountService accountService, ILogger<AccountTool> lo
     [McpServerTool(Name = "GetAccountDetails"), Description("Get account details and available payment methods.")]
     public async Task<Account?> GetAccountDetailsAsync([Description("id of specific account.")] string accountId)
     {
+        using var activity = ToolActivitySource.StartActivity("GetAccountDetailsAsync");
+        activity?.SetTag("tool.name", "GetAccountDetails");
+        activity?.SetTag("tool.input.accountId", accountId);
+
         _logger.LogInformation("Received request to get account details for account id: {AccountId}", accountId);
-        return await _accountService.GetAccountDetailsAsync(accountId);
+        
+        var result = await _accountService.GetAccountDetailsAsync(accountId);
+        
+        activity?.SetTag("tool.output.found", result != null);
+        if (result != null)
+        {
+            activity?.SetTag("tool.output.accountStatus", result.Status ?? "unknown");
+        }
+        
+        return result;
     }
 
     /// <summary>
@@ -32,8 +48,22 @@ public class AccountTool(IAccountService accountService, ILogger<AccountTool> lo
         [Description("id of specific account.")] string accountId,
         [Description("id of specific payment method available for the account id.")] string methodId)
     {
+        using var activity = ToolActivitySource.StartActivity("GetPaymentMethodDetailsAsync");
+        activity?.SetTag("tool.name", "GetPaymentMethodDetails");
+        activity?.SetTag("tool.input.accountId", accountId);
+        activity?.SetTag("tool.input.methodId", methodId);
+
         _logger.LogInformation("Received request to get payment method details for account id: {AccountId} and method id: {MethodId}", accountId, methodId);
-        return await _accountService.GetPaymentMethodDetailsAsync(methodId);
+        
+        var result = await _accountService.GetPaymentMethodDetailsAsync(methodId);
+        
+        activity?.SetTag("tool.output.found", result != null);
+        if (result != null)
+        {
+            activity?.SetTag("tool.output.methodType", result.Type ?? "unknown");
+        }
+        
+        return result;
     }
 
     /// <summary>
@@ -44,8 +74,17 @@ public class AccountTool(IAccountService accountService, ILogger<AccountTool> lo
     [McpServerTool(Name = "GetBeneficiaryDetails"), Description("Get list of registered beneficiaries for a specific account.")]
     public async Task<List<Beneficiary>> GetBeneficiaryDetailsAsync([Description("id of specific account.")] string accountId)
     {
+        using var activity = ToolActivitySource.StartActivity("GetBeneficiaryDetailsAsync");
+        activity?.SetTag("tool.name", "GetBeneficiaryDetails");
+        activity?.SetTag("tool.input.accountId", accountId);
+
         _logger.LogInformation("Received request to get beneficiary details for account id: {AccountId}", accountId);
-        return await _accountService.GetRegisteredBeneficiaryAsync(accountId);
+        
+        var result = await _accountService.GetRegisteredBeneficiaryAsync(accountId);
+        
+        activity?.SetTag("tool.output.beneficiaryCount", result?.Count ?? 0);
+        
+        return result;
     }
 }
 

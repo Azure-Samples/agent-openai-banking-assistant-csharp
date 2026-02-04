@@ -1,5 +1,7 @@
 namespace BankingAssistant.Agents.Orchestration;
 
+using System.Diagnostics;
+
 /// <summary>
 /// Service for orchestrating agent handoffs using Microsoft Agent Framework.
 /// </summary>
@@ -15,6 +17,7 @@ public class AgentOrchestrationService(
     private readonly IAccountAgentManager _accountAgentManager = accountAgentManager;
     private readonly IPaymentAgentManager _paymentAgentManager = paymentAgentManager;
     private readonly ITransactionAgentManager _transactionAgentManager = transactionAgentManager;
+    private static readonly ActivitySource LlmActivitySource = new ActivitySource("BankingAssistant.LLM.Calls");
 
 	/// <summary>
 	/// Executes the agent workflow with handoff orchestration.
@@ -129,11 +132,22 @@ public class AgentOrchestrationService(
             _logger.LogInformation("Account Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
+            
+            using var llmActivity = LlmActivitySource.StartActivity("AccountAgent.RunAsync");
+            llmActivity?.SetTag("llm.model", "gpt-4o");
+            llmActivity?.SetTag("llm.input.messageCount", messages.Count);
+            llmActivity?.SetTag("llm.input.totalLength", messages.Sum(m => m.ToString()?.Length ?? 0));
+            
             var response = await accountAgent.RunAsync(messages);
             
-            _logger.LogInformation("Agent response received");
+            var lastMessage = response.Messages.Last();
+            llmActivity?.SetTag("llm.output.messageCount", response.Messages.Count);
+            llmActivity?.SetTag("llm.output.lastMessageLength", lastMessage.ToString()?.Length ?? 0);
+            llmActivity?.SetTag("llm.output.role", lastMessage.Role);
             
-            var responseMessages = new List<ChatMessage> { response.Messages.Last() };
+            _logger.LogInformation("Agent response received - LLM returned: {Content}", lastMessage.ToString()?.Substring(0, Math.Min(100, lastMessage.ToString()?.Length ?? 0)) ?? "[empty]");
+            
+            var responseMessages = new List<ChatMessage> { lastMessage };
             return (responseMessages, new Dictionary<string, object>());
         }
         catch (Exception ex)
@@ -163,11 +177,22 @@ public class AgentOrchestrationService(
             _logger.LogInformation("Payment Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
+            
+            using var llmActivity = LlmActivitySource.StartActivity("PaymentAgent.RunAsync");
+            llmActivity?.SetTag("llm.model", "gpt-4o");
+            llmActivity?.SetTag("llm.input.messageCount", messages.Count);
+            llmActivity?.SetTag("llm.input.totalLength", messages.Sum(m => m.ToString()?.Length ?? 0));
+            
             var response = await paymentAgent.RunAsync(messages);
             
-            _logger.LogInformation("Agent response received");
+            var lastMessage = response.Messages.Last();
+            llmActivity?.SetTag("llm.output.messageCount", response.Messages.Count);
+            llmActivity?.SetTag("llm.output.lastMessageLength", lastMessage.ToString()?.Length ?? 0);
+            llmActivity?.SetTag("llm.output.role", lastMessage.Role);
             
-            var responseMessages = new List<ChatMessage> { response.Messages.Last() };
+            _logger.LogInformation("Agent response received - LLM returned: {Content}", lastMessage.ToString()?.Substring(0, Math.Min(100, lastMessage.ToString()?.Length ?? 0)) ?? "[empty]");
+            
+            var responseMessages = new List<ChatMessage> { lastMessage };
             return (responseMessages, new Dictionary<string, object>());
         }
         catch (Exception ex)
@@ -197,11 +222,22 @@ public class AgentOrchestrationService(
             _logger.LogInformation("Transaction Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
+            
+            using var llmActivity = LlmActivitySource.StartActivity("TransactionAgent.RunAsync");
+            llmActivity?.SetTag("llm.model", "gpt-4o");
+            llmActivity?.SetTag("llm.input.messageCount", messages.Count);
+            llmActivity?.SetTag("llm.input.totalLength", messages.Sum(m => m.ToString()?.Length ?? 0));
+            
             var response = await transactionAgent.RunAsync(messages);
             
-            _logger.LogInformation("Agent response received");
+            var lastMessage = response.Messages.Last();
+            llmActivity?.SetTag("llm.output.messageCount", response.Messages.Count);
+            llmActivity?.SetTag("llm.output.lastMessageLength", lastMessage.ToString()?.Length ?? 0);
+            llmActivity?.SetTag("llm.output.role", lastMessage.Role);
             
-            var responseMessages = new List<ChatMessage> { response.Messages.Last() };
+            _logger.LogInformation("Agent response received - LLM returned: {Content}", lastMessage.ToString()?.Substring(0, Math.Min(100, lastMessage.ToString()?.Length ?? 0)) ?? "[empty]");
+            
+            var responseMessages = new List<ChatMessage> { lastMessage };
             return (responseMessages, new Dictionary<string, object>());
         }
         catch (Exception ex)
@@ -230,11 +266,22 @@ public class AgentOrchestrationService(
             _logger.LogInformation("Triage Agent created successfully");
 
             _logger.LogInformation("Invoking agent...");
+            
+            using var llmActivity = LlmActivitySource.StartActivity("TriageAgent.RunAsync");
+            llmActivity?.SetTag("llm.model", "gpt-4o");
+            llmActivity?.SetTag("llm.input.messageCount", messages.Count);
+            llmActivity?.SetTag("llm.input.totalLength", messages.Sum(m => m.ToString()?.Length ?? 0));
+            
             var response = await triageAgent.RunAsync(messages);
             
-            _logger.LogInformation("Agent response received");
+            var lastMessage = response.Messages.Last();
+            llmActivity?.SetTag("llm.output.messageCount", response.Messages.Count);
+            llmActivity?.SetTag("llm.output.lastMessageLength", lastMessage.ToString()?.Length ?? 0);
+            llmActivity?.SetTag("llm.output.role", lastMessage.Role);
             
-            var responseMessages = new List<ChatMessage> { response.Messages.Last() };
+            _logger.LogInformation("Agent response received - LLM returned: {Content}", lastMessage.ToString()?.Substring(0, Math.Min(100, lastMessage.ToString()?.Length ?? 0)) ?? "[empty]");
+            
+            var responseMessages = new List<ChatMessage> { lastMessage };
             return (responseMessages, new Dictionary<string, object>());
         }
         catch (Exception ex)

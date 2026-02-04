@@ -52,6 +52,9 @@ public static class ServicesExtensions
                     .WithTracing(tracing => tracing
                         .SetResourceBuilder(resourceBuilder)
                         .AddSource("BankingAssistant")
+                        .AddSource("BankingAssistant.Tools.TransactionTool")
+                        .AddSource("BankingAssistant.Tools.InvoiceScanTool")
+                        .AddSource("BankingAssistant.LLM.Calls")
                         .AddSource("*Microsoft.Extensions.AI")
                         .AddSource("*Microsoft.Extensions.Agents*")
                         .AddAspNetCoreInstrumentation(options =>
@@ -247,7 +250,7 @@ public static class ServicesExtensions
 				.GetChatClient(deployment)
 				.AsIChatClient()
 				.AsBuilder()
-				.UseOpenTelemetry(sourceName: "BankingAssistant", configure: (cfg) => cfg.EnableSensitiveData = false)
+				.UseOpenTelemetry(sourceName: "BankingAssistant", configure: (cfg) => cfg.EnableSensitiveData = true)
 				.Build();
 
 			return chatClient;

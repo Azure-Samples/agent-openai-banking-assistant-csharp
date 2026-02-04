@@ -1,6 +1,9 @@
 using Serilog;
 using Serilog.Events;
 using Scalar.AspNetCore;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+using Azure.Monitor.OpenTelemetry.Exporter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +44,26 @@ if (appInsightsActive)
 Log.Logger = loggerConfig.CreateLogger();
 
 builder.Host.UseSerilog();
+
+// Configure OpenTelemetry for ActivitySource export
+if (appInsightsActive)
+{
+    var appInsightsConnectionString = builder.Configuration.GetValue<string>("ApplicationInsights:ConnectionString");
+    if (!string.IsNullOrEmpty(appInsightsConnectionString))
+    {
+        var resourceBuilder = ResourceBuilder
+            .CreateDefault()
+            .AddService("PaymentMcp");
+
+        builder.Services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource("PaymentMcp.Tools.PaymentTool")
+                .AddAspNetCoreInstrumentation()
+                .AddAzureMonitorTraceExporter(options =>
+                    options.ConnectionString = appInsightsConnectionString));
+    }
+}
 
 try
 {

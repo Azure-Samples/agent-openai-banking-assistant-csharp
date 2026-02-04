@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace BankingAssistant.Agents.Tools;
 
@@ -16,6 +17,7 @@ public class TransactionTool(IHttpClientFactory httpClientFactory, IConfiguratio
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<TransactionTool> _logger = logger;
+    private static readonly ActivitySource ToolActivitySource = new ActivitySource("BankingAssistant.Tools.TransactionTool");
     
     /// <summary>
     /// Retrieves transactions for a specific account from the TransactionsController.
@@ -29,6 +31,12 @@ public class TransactionTool(IHttpClientFactory httpClientFactory, IConfiguratio
         [Description("Optional: Filter transactions by recipient name")] string? recipientName = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(accountId, nameof(accountId));
+
+        // Create OpenTelemetry activity for tool invocation
+        using var activity = ToolActivitySource.StartActivity("GetTransactionsAsync");
+        activity?.SetTag("tool.name", "GetTransactionsAsync");
+        activity?.SetTag("tool.input.accountId", accountId);
+        activity?.SetTag("tool.input.recipientName", recipientName ?? "none");
 
         try
         {
@@ -51,17 +59,24 @@ public class TransactionTool(IHttpClientFactory httpClientFactory, IConfiguratio
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
+                activity?.SetTag("tool.output.status", "success");
+                activity?.SetTag("tool.output.length", content.Length);
                 _logger.LogInformation("Successfully retrieved transactions for account {AccountId}", accountId);
                 return content;
             }
             else
             {
+                activity?.SetTag("tool.output.status", "failure");
+                activity?.SetTag("tool.output.error", $"HTTP {response.StatusCode}");
                 _logger.LogWarning("TransactionsController returned status {StatusCode} for account {AccountId}", response.StatusCode, accountId);
                 return JsonSerializer.Serialize(new { error = $"Failed to retrieve transactions: {response.StatusCode}", accountId });
             }
         }
         catch (Exception ex)
         {
+            activity?.SetTag("tool.output.status", "error");
+            activity?.SetTag("tool.output.exception", ex.GetType().Name);
+            activity?.SetTag("tool.output.message", ex.Message);
             _logger.LogError(ex, "Error retrieving transactions for account {AccountId}", accountId);
             return JsonSerializer.Serialize(new { error = ex.Message, accountId });
         }
